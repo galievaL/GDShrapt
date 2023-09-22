@@ -197,6 +197,14 @@ namespace GDShrapt.Reader
             };
         }
 
+        public override GDDataToken CloneWith(string stringValue)
+        {
+            return new GDIdentifier()
+            {
+                Sequence = stringValue
+            };
+        }
+
         public static bool operator ==(GDIdentifier one, GDIdentifier two)
         {
             if (ReferenceEquals(one, null))

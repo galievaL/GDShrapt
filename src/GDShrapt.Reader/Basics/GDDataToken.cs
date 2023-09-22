@@ -11,6 +11,8 @@ namespace GDShrapt.Reader
             return StringDataRepresentation?.GetHashCode() ?? base.GetHashCode();
         }
 
+        public abstract GDDataToken CloneWith(string stringValue);
+
         public override bool Equals(object obj)
         {
             if (obj is GDDataToken other)

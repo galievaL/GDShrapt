@@ -102,6 +102,14 @@ namespace GDShrapt.Reader
             };
         }
 
+        public override GDDataToken CloneWith(string stringValue)
+        {
+            return new GDType()
+            {
+                Sequence = stringValue
+            };
+        }
+
         public override string StringDataRepresentation => Sequence;
 
         public override string ToString()

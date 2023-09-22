@@ -279,6 +279,14 @@ namespace GDShrapt.Reader
             };
         }
 
+        public override GDDataToken CloneWith(string stringValue)
+        {
+            return new GDNumber()
+            {
+                ValueAsString = stringValue
+            };
+        }
+
         public override string StringDataRepresentation => _literalValue;
 
         public override string ToString()

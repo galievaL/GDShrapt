@@ -174,6 +174,14 @@ namespace GDShrapt.Reader
             };
         }
 
+        public override GDDataToken CloneWith(string stringValue)
+        {
+            return new GDString()
+            {
+                Value = stringValue
+            };
+        }
+
         internal override void HandleSharpChar(GDReadingState state)
         {
             HandleChar('#', state);
