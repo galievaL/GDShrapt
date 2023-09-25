@@ -66,7 +66,7 @@ namespace GDShrapt.Converter
         private ClassDeclarationSyntax GenerateClassShell(string name, string extendsClassName, bool isTool)
         {
             // Get class name
-            var className = name ?? (_settings.FileName != null ? Path.GetFileNameWithoutExtension(_settings.FileName) : null) ?? $"GeneratedClass{_classCounter++}";
+            var className = name ?? (_settings.ClassName != null ? Path.GetFileNameWithoutExtension(_settings.ClassName) : null) ?? $"GeneratedClass{_classCounter++}";
 
             if (_settings.ConvertGDScriptNamingStyleToSharp)
                 className = ConversionHelper.ConvertDeclarationNameToSharpNamingStyle(className);

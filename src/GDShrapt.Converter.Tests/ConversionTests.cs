@@ -21,7 +21,7 @@ extends ResourceFormatSaver
             var visitor = new CSharpGeneratingVisitor2(new ConversionSettings()
             {
                 Namespace = "Generated",
-                FileName = "TestClass.cs",
+                ClassName = "TestClass.cs",
                 ConvertGDScriptNamingStyleToSharp = true
             });
 
@@ -34,9 +34,61 @@ extends ResourceFormatSaver
 namespace Generated
 {
     [Tool]
-    [ClassName(""HTerrainDataSaver"")]
     public class HTerrainDataSaver : ResourceFormatSaver
     {
+    }
+}";
+
+            Assert.AreEqual(cshC, csharpCode);
+        }
+
+        [TestMethod]
+        public void ConversionTest2()
+        {
+            var code = @"
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
+
+const HTerrainData = preload(""./ hterrain_data.gd"")
+
+func get_recognized_extensions(res):
+	if res != null and res is HTerrainData:
+		return PoolStringArray([HTerrainData.META_EXTENSION])
+	return PoolStringArray()
+";
+
+            var parser = new GDScriptReader();
+            var declaration = parser.ParseFileContent(code);
+
+            var visitor = new CSharpGeneratingVisitor2(new ConversionSettings()
+            {
+                Namespace = "Generated",
+                ClassName = "TestClass",
+                ConvertGDScriptNamingStyleToSharp = true
+            });
+
+            var treeWalker = new GDTreeWalker(visitor);
+            treeWalker.WalkInNode(declaration);
+
+            var csharpCode = visitor.BuildCSharpNormalisedCode();
+            var cshC = @"using Godot;
+
+namespace Generated
+{
+    private const string HTerrainData = ""./ hterrain_data.gd"";
+
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
+    {
+        public override PoolStringArray GetRecognizedExtensions(Resource res)
+        {
+            if (res != null && res is HTerrainData)
+            {
+                return new PoolStringArray { HTerrainData.META_EXTENSION };
+            }
+            return new PoolStringArray();
+        }
     }
 }";
 
@@ -45,37 +97,3 @@ namespace Generated
     }
 }
 
-/*
- using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-
-public class CodeGenerator
-{
-    public void GenerateClass()
-    {
-        var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("Generated")).NormalizeWhitespace();
-
-        var @class = SyntaxFactory.ClassDeclaration("HTerrainDataSaver")
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-            .AddBaseListTypes(
-                SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("ResourceFormatSaver")))
-            .AddAttributeLists(
-                SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(
-                    SyntaxFactory.Attribute(SyntaxFactory.ParseName("Tool")))),
-                SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(
-                    SyntaxFactory.Attribute(SyntaxFactory.ParseName("ClassName"),
-                        SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(
-                            SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("HTerrainDataSaver")))))))));
-
-        var compilationUnit = SyntaxFactory.CompilationUnit()
-            .AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("Godot")))
-            .AddMembers(@namespace.AddMembers(@class))
-            .NormalizeWhitespace();
-
-        var code = compilationUnit.ToFullString();
-    }
-}
-Этот код создает новый класс HTerrainDataSaver, который наследуется от ResourceFormatSaver и имеет атрибуты Tool и ClassName. 
-Класс находится в пространстве имен Generated.
- */

@@ -51,7 +51,7 @@ namespace GDShrapt.Converter
                 var visitor = new CSharpGeneratingVisitor(new ConversionSettings()
                 {
                     Namespace = "Generated",
-                    FileName = filePath,
+                    ClassName = filePath,
                     ConvertGDScriptNamingStyleToSharp = true
                 });
 

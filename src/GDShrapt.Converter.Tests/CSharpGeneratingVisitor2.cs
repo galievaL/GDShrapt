@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using GDShrapt.Reader;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -16,26 +17,8 @@ namespace GDShrapt.Converter.Tests
         public CSharpGeneratingVisitor2(ConversionSettings conversionSettings)
         {
             _conversionSettings = conversionSettings;
-
-            //var @cc = SyntaxFactory.ClassDeclaration("HTerrainDataSaver").AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword)); //добавляем класс и модификатор доступа
-            //var c1 = @cc.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("ResourceFormatSaver"))); //наследование
-            //var c2 = c1.AddAttributeLists(  //добавляем аттрибуты
-            //        SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.ParseName("Tool")))),
-            //        SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(
-            //            SyntaxFactory.Attribute(SyntaxFactory.ParseName("ClassName"),
-            //                SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(
-            //                    SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("HTerrainDataSaver")))))))));
-
-            //var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("Generated")).NormalizeWhitespace();
-            //var compilationUnit = SyntaxFactory.CompilationUnit()
-            //    .AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("Godot")))
-            //    .AddMembers(@namespace.AddMembers(c2))
-            //    .NormalizeWhitespace();
-
-            //var code = compilationUnit.ToFullString();
         }
 
-        #region
         public void DidLeft(GDNode node)
         {
             ////////
@@ -383,15 +366,29 @@ namespace GDShrapt.Converter.Tests
         public void Visit(GDClassDeclaration d)
         {
             ////////
-            var className = d.ClassName.ToString().Split(' ');//.Replace("class_name", "").Trim();
 
-            if (className[0] == "class_name")
-                _partsCode = SyntaxFactory.ClassDeclaration(className[1]).AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+            var name = d.ClassName?.Identifier?.ToString() ?? _conversionSettings.ClassName;
+
+            _partsCode = SyntaxFactory.ClassDeclaration(GetValidClassName(name)).AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
         }
 
+        public string GetValidClassName(string className)
+        {
+            if (string.IsNullOrEmpty(className))
+                return _conversionSettings.ClassName;
+
+            if (className[0] != '_' && !char.IsLetter(className[0]))
+                className = '_' + className;
+
+            Regex.Replace(className, @"^[\p{L}_][\p{L}\p{Nd}_]*$", "");
+
+            return className;
+        }
+
+        #region
         public void Visit(GDDictionaryKeyValueDeclaration d)
         {
-            throw new System.NotImplementedException();
+            throw new System.NotImplementedException(); 
         }
 
         public void Visit(GDEnumDeclaration d)
@@ -452,26 +449,6 @@ namespace GDShrapt.Converter.Tests
         public void Visit(GDClassAtributesList list)
         {
             ////////
-            //var lllii = list.Nodes;
-
-            //for (int i = 0; i < list.Count; i++)
-            //{
-            //    var g = list[i].ToString();
-
-            //    switch (g.Split(' ')[0])
-            //    {
-            //        case "":
-            //            break;
-            //        default:
-            //            break;
-            //    }
-            //    //GDClassAtributesList 'tool \n class_name HTerrainDataSaver \n extends ResourceFormatSaver\n'
-            //}
-
-            _partsCode = _partsCode.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("ResourceFormatSaver"))); //наследование
-            _partsCode = _partsCode.AddAttributeLists(  //добавляем аттрибуты
-                       SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.ParseName("Tool")))),
-                       SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.ParseName("ClassName"), SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("HTerrainDataSaver")))))))));
         }
 
         public void Visit(GDClassMembersList list)
@@ -537,6 +514,8 @@ namespace GDShrapt.Converter.Tests
         public void Visit(GDToolAtribute a)
         {
             ////////
+            var toolAtributeName = "Tool";
+            _partsCode = _partsCode.AddAttributeLists(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.ParseName(toolAtributeName)))));
         }
 
         public void Visit(GDClassNameAtribute a)
@@ -547,6 +526,8 @@ namespace GDShrapt.Converter.Tests
         public void Visit(GDExtendsAtribute a)
         {
             ////////
+            var extendsAtribute = a.ToString().Split(' ');
+            _partsCode = _partsCode.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(extendsAtribute[1])));
         }
 
         public void Visit(GDExpressionStatement s)
