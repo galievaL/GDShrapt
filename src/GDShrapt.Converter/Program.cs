@@ -48,7 +48,7 @@ namespace GDShrapt.Converter
                 var declaration = parser.ParseFile(filePath);
 
                 // Create GDScript tree walker
-                var visitor = new CSharpGeneratingVisitor(new ConversionSettings()
+                var visitor = new CSharpGeneratingVisitor1(new ConversionSettings()
                 {
                     Namespace = "Generated",
                     ClassName = filePath,

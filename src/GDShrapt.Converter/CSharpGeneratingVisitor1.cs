@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace GDShrapt.Converter
 {
-    public class CSharpGeneratingVisitor //: INodeVisitor
+    public class CSharpGeneratingVisitor1 //: INodeVisitor
     {
         private readonly ConversionSettings _settings;
 
@@ -20,7 +20,7 @@ namespace GDShrapt.Converter
         private Stack<StackNode> _completionStack = new Stack<StackNode>();
 
 
-        public CSharpGeneratingVisitor(ConversionSettings settings)
+        public CSharpGeneratingVisitor1(ConversionSettings settings)
         {
             _settings = settings;
         }
