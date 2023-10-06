@@ -5,6 +5,7 @@ using GDShrapt.Reader;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace GDShrapt.Converter.Tests
 {
@@ -12,21 +13,17 @@ namespace GDShrapt.Converter.Tests
     {
         public void DidLeft(GDNode node)
         {
-            ////////
-            var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("Generated")).NormalizeWhitespace();
-            var usings = new UsingDirectiveSyntax[]{SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("Godot")),
-                                                    SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")),
-                                                    SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Linq"))};
+            var @namespace = NamespaceDeclaration(ParseName("Generated")).NormalizeWhitespace();
+            var usings = new UsingDirectiveSyntax[]{UsingDirective(ParseName("Godot")),
+                                                    UsingDirective(ParseName("System")),
+                                                    UsingDirective(ParseName("System.Linq"))};
 
-            _compilationUnit = SyntaxFactory.CompilationUnit()
-                .AddUsings(usings)
-                .AddMembers(@namespace.AddMembers(_partsCode))
-                .NormalizeWhitespace();
+            _compilationUnit = CompilationUnit().AddUsings(usings).AddMembers(@namespace.AddMembers(_partsCode)).NormalizeWhitespace();
         }
 
         public void DidLeft(GDExpression expr)
         {
-            throw new System.NotImplementedException();
+
         }
     }
 }

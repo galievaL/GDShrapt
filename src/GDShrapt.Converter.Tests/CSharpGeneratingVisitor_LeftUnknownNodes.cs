@@ -12,12 +12,12 @@ namespace GDShrapt.Converter.Tests
     {
         public void LeftUnknown(GDNode node)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public void LeftUnknown(GDExpression e)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }
