@@ -65,7 +65,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDInnerClassDeclaration d)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDParameterDeclaration d)
@@ -140,7 +139,7 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDExpressionsList list)
         {
-            throw new NotImplementedException();
+
         }
 
         public void Left(GDMatchCasesList list)
@@ -185,7 +184,7 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDArrayInitializerExpression e)
         {
-            throw new NotImplementedException();
+
         }
 
         public void Left(GDBoolExpression e)
@@ -270,7 +269,7 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDIdentifierExpression e)
         {
-            throw new NotImplementedException();
+
         }
 
         public void Left(GDGetNodeExpression e)
@@ -290,7 +289,7 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDCallExpression e)
         {
-            throw new NotImplementedException();
+
         }
 
         public void Left(GDDualOperatorExpression e)

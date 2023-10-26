@@ -2,10 +2,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests
+namespace GDShrapt.Converter.Tests.Tests
 {
     [TestClass]
-    public class ClassNameTests
+    public class ClassNameTests : Test
     {
         [TestMethod]
         public void ClassNameTest1()
