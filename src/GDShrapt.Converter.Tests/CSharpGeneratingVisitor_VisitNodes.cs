@@ -19,16 +19,6 @@ namespace GDShrapt.Converter.Tests
             _partsCode = ClassDeclaration(GetValidClassName(name)).AddModifiers(Token(SyntaxKind.PublicKeyword));
         }
 
-        public string GetValidClassName(string className)
-        {
-            if (className[0] != '_' && !char.IsLetter(className[0]))
-                className = '_' + className;
-
-            className = Regex.Replace(className, "[^a-zA-Zа-яА-Я0-9_]", string.Empty);
-
-            return className;
-        }
-
         public void Visit(GDVariableDeclaration d)
         {
             var @var = d.VarKeyword;
@@ -246,32 +236,6 @@ namespace GDShrapt.Converter.Tests
             if (collection != null)
                 _partsCode = _partsCode.AddMembers(new MemberDeclarationSyntax[] { collection });
         }
-        InitializerExpressionSyntax CreateArrayInitializer(params object[] values)
-        {
-            //var literalExpression = values.Select(value => (ExpressionSyntax)GetLiteralExpression((GDNumberExpression)value));
-
-            //var gg = values.Select(value =>
-            //            value is string str
-            //                ? (ExpressionSyntax)LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(str))
-            //                : value is int num
-            //                    ? LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(num))
-            //                    : (ExpressionSyntax)value);
-
-            List<ExpressionSyntax> l = new List<ExpressionSyntax>();
-            foreach (var v in values)
-            {
-                if (v is string str)
-                    l.Add((ExpressionSyntax)LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(str)));
-                else if (v is int num)
-                    l.Add(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(num)));
-                else
-                    l.Add((ExpressionSyntax)v);
-            }
-
-            var initializerExpression = InitializerExpression(SyntaxKind.ArrayInitializerExpression, SeparatedList(l));
-            return initializerExpression;
-        }
-
         public void Visit(GDExpressionsList list)
         {
         }

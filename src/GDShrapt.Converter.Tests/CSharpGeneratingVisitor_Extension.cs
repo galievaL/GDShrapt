@@ -12,9 +12,14 @@ namespace GDShrapt.Converter.Tests
 {
     internal partial class CSharpGeneratingVisitor : INodeVisitor
     {
-        public FieldDeclarationSyntax GetVariableDeclaration(string nameVariable, bool returnValue, bool isConst = false, SyntaxKind accessModifier = SyntaxKind.PublicKeyword)
+        public string GetValidClassName(string className)
         {
-            return GetVariableDeclarationWithPredefinedType(nameVariable, SyntaxKind.BoolKeyword, GetLiteralExpression(returnValue), isConst, accessModifier);
+            if (className[0] != '_' && !char.IsLetter(className[0]))
+                className = '_' + className;
+
+            className = Regex.Replace(className, "[^a-zA-Zа-яА-Я0-9_]", string.Empty);
+
+            return className;
         }
 
         public FieldDeclarationSyntax GetVariableDeclaration(string nameVariable, string returnValue, bool isConst = false, SyntaxKind accessModifier = SyntaxKind.PublicKeyword)
