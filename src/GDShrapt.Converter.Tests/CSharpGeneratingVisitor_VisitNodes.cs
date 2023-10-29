@@ -68,16 +68,6 @@ namespace GDShrapt.Converter.Tests
                     var literalExpressionSyntaxesList = GetLiteralExpression(initializer).LiteralExpressionSyntaxesList;
                     var arguments = literalExpressionSyntaxesList?.Select(x => Argument(x)).ToList();
 
-                    //foreach (var arg in nodeArguments)
-                    //{
-                    //    var literalExp = GetLiteralExpression(arg).LiteralExpressionSyntaxes;
-
-                    //    //arguments = literalExp.Select(m => Argument(m)).ToList();
-
-                    //    foreach (var l in literalExp)
-                    //        arguments.Add(Argument(l));
-                    //}
-
                     NameSyntax typeVariable = default;
                     var methodName = "";
 
