@@ -22,13 +22,143 @@ namespace GDShrapt.Converter.Tests
             return className;
         }
 
-        public FieldDeclarationSyntax GetVariableDeclaration(string nameVariable, string returnValue, bool isConst = false, SyntaxKind accessModifier = SyntaxKind.PublicKeyword)
+        /*
+        LiteralExpressionSyntax GetLiteralExpression(GDNode node)
         {
-            var typeVariable = SyntaxKind.StringKeyword;
-            var returnValueType = SyntaxKind.StringLiteralExpression;
-            var literalExpression = LiteralExpression(returnValueType, Literal(returnValue));
+            switch (node.TypeName)
+            {
+                case "GDStringExpression":
+                    return GetLiteralExpression((GDStringExpression)node);
+                case "GDNumberExpression":
+                    return GetLiteralExpression((GDNumberExpression)node);
+                case "GDBoolExpression":
+                    return GetLiteralExpression(bool.Parse(node.ToString()));
+                case "GDCallExpression":
+                    //var arguments = new List<ArgumentSyntax>();
+                    //var nodes = node.Nodes.ToList();
 
-            return GetVariableDeclarationWithPredefinedType(nameVariable, typeVariable, literalExpression, isConst, accessModifier);
+                    //foreach (var n in nodes)
+                    //    arguments.Add(Argument(GetLiteralExpression(n)));
+
+                    //return arguments;
+                    throw new NotImplementedException();
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+        List<ArgumentSyntax> GetLiteralExpression(List<GDNode> nodes)
+        {
+            var arguments = new List<ArgumentSyntax>();
+
+            foreach (var node in nodes)
+                arguments.Add(Argument(GetLiteralExpression(node)));
+
+            return arguments;
+        }*/
+
+        ExpressionSyntaxHelper GetLiteralExpression(GDNode node, ExpressionSyntaxHelper helper = null)
+        {
+            LiteralExpressionSyntax expr = null;
+
+            if (node.TypeName == "")
+                throw new NotImplementedException();
+
+            switch (node.TypeName)
+            {
+                case "GDCallExpression":
+                    var exprList = node.Nodes.Where(x => x.TypeName == "GDExpressionsList").ToList()[0];
+                    var nodes = exprList.Nodes.ToList();
+                    helper = helper ?? new ExpressionSyntaxHelper(new List<LiteralExpressionSyntax>());
+
+                    foreach (var n in nodes)
+                        helper.LiteralExpressionSyntaxesList.Add(GetLiteralExpression(n, helper).LiteralExpressionSyntax);
+                    return helper;
+                case "GDStringExpression":
+                    expr = GetLiteralExpression((GDStringExpression)node);
+                    break;
+                case "GDNumberExpression":
+                    expr = GetLiteralExpression((GDNumberExpression)node);
+                    break;
+                case "GDBoolExpression":
+                    expr = GetLiteralExpression(bool.Parse(node.ToString()));
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+/*
+            if (node.TypeName == "GDCallExpression")
+            {
+                var exprList = node.Nodes.Where(x => x.TypeName == "GDExpressionsList").ToList()[0];
+                var nodes = exprList.Nodes.ToList();
+                helper = helper ?? new ExpressionSyntaxHelper(new List<LiteralExpressionSyntax>());
+
+                foreach (var n in nodes)
+                    helper.LiteralExpressionSyntaxesList.Add(GetLiteralExpression(n, helper).LiteralExpressionSyntax);
+
+                return helper;
+            }
+            else if (node.TypeName == "GDStringExpression")
+                expr = GetLiteralExpression((GDStringExpression)node);
+            else if (node.TypeName == "GDNumberExpression")
+                expr = GetLiteralExpression((GDNumberExpression)node);
+            else if (node.TypeName == "GDBoolExpression")
+                expr = GetLiteralExpression(bool.Parse(node.ToString()));
+*/
+            expr = expr ?? throw new NotImplementedException();
+            helper = helper ?? new ExpressionSyntaxHelper(expr);
+
+            helper.LiteralExpressionSyntax = expr;
+
+            return helper;
+            #region
+            /*switch (node.TypeName)
+            {
+                case "GDStringExpression":
+                    expr = GetLiteralExpression((GDStringExpression)node);
+
+                    if (helper == null)
+                        return new ExpressionSyntaxHelper(expr);
+
+                    helper.LiteralExpressionSyntaxes.Add(expr);
+                    return helper;
+                case "GDNumberExpression":
+                    expr = GetLiteralExpression((GDNumberExpression)node);
+
+                    if (helper == null)
+                        return new ExpressionSyntaxHelper(expr);
+
+                    helper.LiteralExpressionSyntaxes.Add(expr);
+                    return helper;
+                case "GDBoolExpression":
+                    expr = GetLiteralExpression(bool.Parse(node.ToString()));
+
+                    if (helper == null)
+                        return new ExpressionSyntaxHelper(expr);
+
+                    helper.LiteralExpressionSyntaxes.Add(expr);
+                    return helper;
+                case "GDCallExpression":
+                    var nodes = node.Nodes.ToList();
+
+                    helper = helper ?? new ExpressionSyntaxHelper();
+
+                    foreach (var n in nodes)
+                        helper.LiteralExpressionSyntaxes.Add(GetLiteralExpression(n, helper).LiteralExpressionSyntax);
+
+                    return helper;
+
+                    //var arguments = new List<ArgumentSyntax>();
+                    //var nodes = node.Nodes.ToList();
+
+                    //foreach (var n in nodes)
+                    //    arguments.Add(Argument(GetLiteralExpression(n)));
+
+                    //return arguments;
+                    //throw new NotImplementedException();
+                default:
+                    throw new NotImplementedException();
+            }*/
+            #endregion
         }
 
         LiteralExpressionSyntax GetLiteralExpression(GDNumberExpression numberExpression, GDNumberType? type = null)
@@ -97,10 +227,10 @@ namespace GDShrapt.Converter.Tests
                         .AddModifiers(Token(SyntaxKind.PublicKeyword));
         }
 
-        public FieldDeclarationSyntax GetVariableDeclarationWithPredefinedType(string nameVariable, SyntaxKind typeVariable, ExpressionSyntax literalExpression, bool isConst = false, SyntaxKind accessModifier = SyntaxKind.PublicKeyword)
-        {
-            return GetVariableDeclaration(nameVariable, PredefinedType(Token(typeVariable)), literalExpression, isConst, accessModifier);
-        }
+        //public FieldDeclarationSyntax GetVariableDeclarationWithPredefinedType(string nameVariable, SyntaxKind typeVariable, ExpressionSyntax literalExpression, bool isConst = false, SyntaxKind accessModifier = SyntaxKind.PublicKeyword)
+        //{
+        //    return GetVariableDeclaration(nameVariable, PredefinedType(Token(typeVariable)), literalExpression, isConst, accessModifier);
+        //}
 
         public FieldDeclarationSyntax GetVariableDeclaration(string nameVariable, TypeSyntax typeVariable, ExpressionSyntax literalExpression, bool isConst = false, SyntaxKind accessModifier = SyntaxKind.PublicKeyword)
         {

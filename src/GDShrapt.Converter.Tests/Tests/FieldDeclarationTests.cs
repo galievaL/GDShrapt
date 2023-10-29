@@ -152,6 +152,64 @@ tool
 class_name HTerrainDataSaver
 extends ResourceFormatSaver
 
+# Векторы
+var position = Hhhh(MyMethod(15), 20)
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
+    {
+        public Variant position = Variant.From(Hhhh(MyMethod(15), 20L));
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTest6()
+        {
+            var code = @"
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
+
+# Векторы
+var position = Vector2(MyMethod(15), 20)
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
+    {
+        public Vector2 position = new Vector2(MyMethod(15), 20L);
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTest7()
+        {
+            var code = @"
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
+
 const HTerrainData = preload(""./ hterrain_data.gd"")
 ";
 
@@ -164,7 +222,7 @@ namespace Generated
     [Tool]
     public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public GodotObject HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
+        public const GodotObject HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);

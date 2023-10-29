@@ -161,6 +161,41 @@ tool
 class_name HTerrainDataSaver
 extends ResourceFormatSaver
 
+var variants = [Plane(1,2,3,4), Vector2(0, 1), 2, 0, 0.0, 1.79769e308]
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class TestClass
+    {
+        public Variant[] variants =
+        {
+            Variant.CreateFrom(new Plane(1, 2, 3, 4)),
+            Variant.CreateFrom(new Vector2(0, 1)),
+            Variant.CreateFrom(2L),
+            Variant.CreateFrom(0L),
+            Variant.CreateFrom(0),
+            Variant.CreateFrom(1.79769E+308)
+        };
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void ArrayTest6()
+        {
+            var code = @"
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
+
 var variants = [Plane(1,2,3,4), Vector2(0, 1), [2, 0, 0.0, 1.79769e308]]
 ";
 
@@ -186,7 +221,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void ArrayTest6()
+        public void ArrayTest7()
         {
             var code = @"
 tool
