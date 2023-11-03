@@ -40,7 +40,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDExpressionStatement s)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDToolAtribute a)
@@ -60,7 +59,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDMethodDeclaration d)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDInnerClassDeclaration d)
@@ -69,7 +67,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDParameterDeclaration d)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDClassDeclaration d)
@@ -149,7 +146,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDParametersList list)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDPathList list)
@@ -164,7 +160,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDStatementsList list)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDIfBranch branch)
@@ -214,7 +209,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDReturnExpression e)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDPassExpression e)

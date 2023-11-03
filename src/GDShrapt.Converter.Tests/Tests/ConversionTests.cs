@@ -59,7 +59,7 @@ namespace Generated
     [Tool]
     public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public override PoolStringArray GetRecognizedExtensions(Resource res)
+        public PoolStringArray GetRecognizedExtensions(Resource res)
         {
             if (res != null && res is HTerrainData)
             {

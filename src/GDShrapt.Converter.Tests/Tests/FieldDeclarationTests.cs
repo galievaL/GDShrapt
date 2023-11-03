@@ -123,8 +123,7 @@ tool
 class_name HTerrainDataSaver
 extends ResourceFormatSaver
 
-# Векторы
-var position = Vector2(10, 20)
+var position = Vector2I(10, 20)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -136,7 +135,7 @@ namespace Generated
     [Tool]
     public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public Vector2 position = new Vector2(10L, 20L);
+        public Vector2I position = new Vector2I(10L, 20L);
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -145,14 +144,13 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldDeclarationTest5()
+        public void FieldDeclarationTest5_1()
         {
             var code = @"
 tool
 class_name HTerrainDataSaver
 extends ResourceFormatSaver
 
-# Векторы
 var position = Hhhh(MyMethod(15), 20)
 ";
 
@@ -165,7 +163,77 @@ namespace Generated
     [Tool]
     public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public Variant position = Variant.From(Hhhh(MyMethod(15), 20L));
+        public Variant position = Variant.From(Hhhh(MyMethod(15L), 20L));
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTest5_2()
+        {
+            var code = @"
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
+
+var position = Hhhh(11.5, 20)
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
+    {
+        public Variant position = Variant.From(Hhhh(11.5, 20L));
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTest5_3()
+        {
+            var code = @"
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
+
+var position = get_numbers(20)
+
+const HTerrainData = preload(""./ hterrain_data.gd"")
+
+func get_numbers(res):
+	return PoolStringArray()
+";
+            //P.S GetNumber(20L) без Variant.CreateFrom так как у метода тип Variant
+            //Инициализатор поля не может обращаться к нестатическому полю, методу или свойству "CSharpGeneratingVisitor.GetValidClassName(string)"
+            //поэтому методу нужно будет прописать static
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
+    {
+        public Variant position = GetNumber(20L);
+
+        public const GodotObject HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
+
+        public override Variant GetNumber(Resource res)
+        {
+            return Variant.From(PoolStringArray());
+        }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);

@@ -16,11 +16,7 @@ namespace GDShrapt.Converter.Tests
         public List<LiteralExpressionSyntax> LiteralExpressionSyntaxesList;
         public CountExpressionSyntax? CountExprSyntax;
 
-        //public List<ArgumentSyntax> ArgumentLiteralExpressionSyntax
-        //{
-        //    get => Argument(value);
-        //    set => Argument(LiteralExpressionSyntax);
-        //}
+        public List<ArgumentSyntax> ArgumentLiteralExpressionSyntax = new List<ArgumentSyntax>();
 
         public ExpressionSyntaxHelper(LiteralExpressionSyntax literalExpressionSyntax)
         {
