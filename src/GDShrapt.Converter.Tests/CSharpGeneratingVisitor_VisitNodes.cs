@@ -44,7 +44,10 @@ namespace GDShrapt.Converter.Tests
                 case "GDCallExpression":
                     //var literalExpressionSyntaxesList = GetLiteralExpression(initializer).LiteralExpressionSyntaxesList;
                     //var arguments = literalExpressionSyntaxesList?.Select(x => Argument(x)).ToList();
-                    var arguments = GetLiteralExpression(initializer).ArgumentLiteralExpressionSyntax;
+                    //var arguments = GetLiteralExpression(initializer).ArgumentLiteralExpressionSyntax;
+                    //arguments.RemoveAt(arguments.Count-1);
+
+                    var arguments = GetLiteralExpression(initializer).GetResultArgumentLiteralExpressionSyntax();
 
                     //NameSyntax typeVariable = default;
                     var initializerNodes = initializer.Nodes.ToList();

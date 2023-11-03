@@ -36,7 +36,7 @@ namespace GDShrapt.Converter.Tests
                     var exprList = node?.Nodes?.Where(x => x.TypeName == "GDExpressionsList").FirstOrDefault();
                     //{"GDNumberExpression '10'", "GDNumberExpression '20'"}
                     var nodes = exprList?.Nodes?.ToList();
-                    helper = helper ?? new ExpressionSyntaxHelper(new List<LiteralExpressionSyntax>());
+                    helper = helper ?? new ExpressionSyntaxHelper(new List<ArgumentSyntax>());
 
                     var ident = ((GDIdentifierExpression)node?.Nodes?.Where(x => x.TypeName == "GDIdentifierExpression").FirstOrDefault()).Identifier.ToString();
                     var inv = GetExpressionSyntax(ident);
@@ -44,10 +44,11 @@ namespace GDShrapt.Converter.Tests
                     foreach (var n in nodes)
                     {
                         //helper.LiteralExpressionSyntaxesList.Add(GetLiteralExpression(n, helper).LiteralExpressionSyntax);
-                        helper.ArgumentLiteralExpressionSyntax.Add(Argument(GetLiteralExpression(n, helper).LiteralExpressionSyntax));
+                        //helper.ArgumentLiteralExpressionSyntax.Add(Argument(GetLiteralExpression(n, helper).LiteralExpressionSyntax));
+                        helper.AddArgumentLiteralExpressionSyntax(Argument(GetLiteralExpression(n, helper).LiteralExpressionSyntax));
                     }
-                    //var dd = GetArgumentToMethodExpressionSyntax(ident, helper.ArgumentLiteralExpressionSyntax);
-                    //helper.ArgumentLiteralExpressionSyntax.Add(Argument(dd));
+                    var dd = GetArgumentToMethodExpressionSyntax(ident, helper.GetArgumentLiteralExpressionSyntax()); //helper.ArgumentLiteralExpressionSyntax);
+                    helper.AddArgumentLiteralExpressionSyntax(Argument(dd));
 
                     return helper;
                 case "GDStringExpression":
@@ -106,7 +107,6 @@ namespace GDShrapt.Converter.Tests
             {
                 var expressionSyntax = CreateMethodObjectCreationExpressionSyntax(methodName);
                 literalExpression = ReplaceArgumentsInExpressionSyntax(expressionSyntax, arguments);
-
             }
             else if (methodName == "preload")
             {
@@ -122,13 +122,19 @@ namespace GDShrapt.Converter.Tests
                 //else
                 //literalExpression = CreateVariantCreateFromMethodInvocationExpression(arguments, "Variant", "CreateFrom");
 
-                var expressionSyntax = CreateMethodInvocationExpressionSyntax("Variant", "CreateFrom");
-                literalExpression = AddArgumentToExpressionSyntax(expressionSyntax, arguments);
+                var expressionSyntax = CreateMethodInvocationExpressionSyntax(methodName);
+                var argLiteralExpression = Argument(ReplaceArgumentsInExpressionSyntax(expressionSyntax, arguments));
+
+                var expressionSyntax2 = CreateMethodInvocationExpressionSyntax("Variant", "CreateFrom");
+                literalExpression = AddArgumentToExpressionSyntax(expressionSyntax2, argLiteralExpression);
             }
             else
             {
-                var expressionSyntax = CreateMethodInvocationExpressionSyntax("Variant", "From");
-                literalExpression = AddArgumentToExpressionSyntax(expressionSyntax, arguments);
+                var expressionSyntax = CreateMethodInvocationExpressionSyntax(methodName);
+                var argLiteralExpression = Argument(ReplaceArgumentsInExpressionSyntax(expressionSyntax, arguments));
+
+                var expressionSyntax2 = CreateMethodInvocationExpressionSyntax("Variant", "From");
+                literalExpression = AddArgumentToExpressionSyntax(expressionSyntax2, argLiteralExpression);
             }
 
             return literalExpression;
@@ -303,6 +309,16 @@ namespace GDShrapt.Converter.Tests
         }
 
         InvocationExpressionSyntax AddArgumentToExpressionSyntax(InvocationExpressionSyntax expressionSyntax, List<ArgumentSyntax> arguments)
+        {
+            return expressionSyntax.WithArgumentList(ArgumentList(SeparatedList(arguments)));
+        }
+
+        InvocationExpressionSyntax ReplaceArgumentsInExpressionSyntax(InvocationExpressionSyntax expressionSyntax, ArgumentSyntax argument)
+        {
+            return expressionSyntax.WithArgumentList(ArgumentList(SingletonSeparatedList(argument)));
+        }
+
+        InvocationExpressionSyntax ReplaceArgumentsInExpressionSyntax(InvocationExpressionSyntax expressionSyntax, List<ArgumentSyntax> arguments)
         {
             return expressionSyntax.WithArgumentList(ArgumentList(SeparatedList(arguments)));
         }
