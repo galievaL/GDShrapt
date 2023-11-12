@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using GDShrapt.Reader;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,6 +12,21 @@ namespace GDShrapt.Converter.Tests
     {
         public void Left(GDVariableDeclaration d)
         {
+        }
+
+        public void Left(GDClassDeclaration d)
+        {
+            if (_constructorCollection.Count > 0)
+            {
+                foreach (var constr in _constructorCollection)
+                {
+                    var parameters = constr.Key.ParametersSyntax;
+                    var statementSyntaxes = constr.Value;
+
+                    var contr = GetConstructorDeclaration(parameters, expressionStatementSyntaxes: statementSyntaxes.ToArray());
+                    _partsCode = _partsCode.AddMembers(contr);
+                }
+            }
         }
 
         public void Left(GDWhileStatement s)
@@ -67,11 +83,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDParameterDeclaration d)
         {
-        }
-
-        public void Left(GDClassDeclaration d)
-        {
-            ////////
         }
 
         public void Left(GDDictionaryKeyValueDeclaration decl)
@@ -288,7 +299,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDDualOperatorExpression e)
         {
-            throw new NotImplementedException();
         }
 
         public void LeftListChild(GDNode node)

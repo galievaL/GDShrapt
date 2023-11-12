@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using GDShrapt.Reader;
@@ -12,8 +13,11 @@ namespace GDShrapt.Converter.Tests
     {
         readonly ConversionSettings _conversionSettings;
 
-        ClassDeclarationSyntax _partsCode;
+        private ClassDeclarationSyntax _partsCode;
         private CompilationUnitSyntax _compilationUnit;
+
+        private string _className;
+        private Dictionary<ParameterListTKey, List<ExpressionStatementSyntax>> _constructorCollection = new Dictionary<ParameterListTKey, List<ExpressionStatementSyntax>>();
 
         public CSharpGeneratingVisitor(ConversionSettings conversionSettings)
         {

@@ -5,7 +5,7 @@ using System.Diagnostics;
 namespace GDShrapt.Converter.Tests.Tests
 {
     [TestClass]
-    public class ArrayTests : Test
+    public class ArrayTests_old : Test
     {
         [TestMethod]
         public void ArrayTest1()

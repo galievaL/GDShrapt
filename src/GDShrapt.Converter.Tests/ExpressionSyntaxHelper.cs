@@ -13,28 +13,7 @@ namespace GDShrapt.Converter.Tests
     public class ExpressionSyntaxHelper
     {
         public LiteralExpressionSyntax LiteralExpressionSyntax;
-        //public List<LiteralExpressionSyntax> LiteralExpressionSyntaxesList;
-        //public CountExpressionSyntax? CountExprSyntax;
-
-        //public List<ArgumentSyntax> ArgumentLiteralExpressionSyntax = new List<ArgumentSyntax>();
-
         List<ArgumentSyntax> _argumentLiteralExpressionSyntax = new List<ArgumentSyntax>();
-
-        public List<ArgumentSyntax> GetArgumentLiteralExpressionSyntax()
-        {
-            return _argumentLiteralExpressionSyntax;
-        }
-
-        public List<ArgumentSyntax> GetResultArgumentLiteralExpressionSyntax()
-        {
-            _argumentLiteralExpressionSyntax.RemoveAt(_argumentLiteralExpressionSyntax.Count - 1);
-            return _argumentLiteralExpressionSyntax;
-        }
-
-        public void AddArgumentLiteralExpressionSyntax(ArgumentSyntax argument)
-        {
-            _argumentLiteralExpressionSyntax.Add(argument);
-        }
 
         public ExpressionSyntaxHelper()
         {
@@ -43,20 +22,23 @@ namespace GDShrapt.Converter.Tests
         public ExpressionSyntaxHelper(LiteralExpressionSyntax literalExpressionSyntax)
         {
             LiteralExpressionSyntax = literalExpressionSyntax;
-            //CountExprSyntax = CountExpressionSyntax.Singular;
         }
 
         public ExpressionSyntaxHelper(List<ArgumentSyntax> literalExpressionSyntaxes)
         {
             _argumentLiteralExpressionSyntax = literalExpressionSyntaxes;
-            //LiteralExpressionSyntaxesList = literalExpressionSyntaxes;
-            //CountExprSyntax = CountExpressionSyntax.Multiple;
         }
-    }
 
-    public enum CountExpressionSyntax
-    {
-        Singular,
-        Multiple
+        public void AddArgumentLiteralExpressionSyntax(ArgumentSyntax argument) =>
+            _argumentLiteralExpressionSyntax.Add(argument);
+
+        public List<ArgumentSyntax> GetArgumentLiteralExpressionSyntax() =>
+            _argumentLiteralExpressionSyntax;
+
+        public List<ArgumentSyntax> GetResultArgumentLiteralExpressionSyntax()
+        {
+            _argumentLiteralExpressionSyntax.RemoveAt(_argumentLiteralExpressionSyntax.Count - 1);
+            return _argumentLiteralExpressionSyntax;
+        }
     }
 }

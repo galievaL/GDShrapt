@@ -14,22 +14,7 @@ namespace GDShrapt.Converter.Tests.Tests
 tool
 extends ResourceFormatSaver
 ";
-
-            var parser = new GDScriptReader();
-            var declaration = parser.ParseFileContent(code);
-
-            var visitor = new CSharpGeneratingVisitor(new ConversionSettings()
-            {
-                Namespace = "Generated",
-                ClassName = "TestClass",
-                ConvertGDScriptNamingStyleToSharp = true
-            });
-
-            var treeWalker = new GDTreeWalker(visitor);
-            treeWalker.WalkInNode(declaration);
-
-            var csharpCode = visitor.BuildCSharpNormalisedCode();
-            var cshC = @"using Godot;
+            var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
 
@@ -40,8 +25,11 @@ namespace Generated
     {
     }
 }";
+            var @namespace = "Generated";
+            var className = "TestClass";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code, @namespace, className);
 
-            Assert.AreEqual(cshC, csharpCode);
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
 
         [TestMethod]
@@ -52,22 +40,7 @@ tool
 class_name 123H+=Ter^5r3_-ain-DataSaver
 extends ResourceFormatSaver
 ";
-
-            var parser = new GDScriptReader();
-            var declaration = parser.ParseFileContent(code);
-
-            var visitor = new CSharpGeneratingVisitor(new ConversionSettings()
-            {
-                Namespace = "Generated",
-                ClassName = "TestClass",
-                ConvertGDScriptNamingStyleToSharp = true
-            });
-
-            var treeWalker = new GDTreeWalker(visitor);
-            treeWalker.WalkInNode(declaration);
-
-            var csharpCode = visitor.BuildCSharpNormalisedCode();
-            var cshC = @"using Godot;
+            var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
 
@@ -78,8 +51,11 @@ namespace Generated
     {
     }
 }";
+            var @namespace = "Generated";
+            var className = "TestClass";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code, @namespace, className);
 
-            Assert.AreEqual(cshC, csharpCode);
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
 
         [TestMethod]
@@ -89,22 +65,7 @@ namespace Generated
 tool
 extends ResourceFormatSaver
 ";
-
-            var parser = new GDScriptReader();
-            var declaration = parser.ParseFileContent(code);
-
-            var visitor = new CSharpGeneratingVisitor(new ConversionSettings()
-            {
-                Namespace = "Generated",
-                ClassName = "123Te@&s-t @_Class",
-                ConvertGDScriptNamingStyleToSharp = true
-            });
-
-            var treeWalker = new GDTreeWalker(visitor);
-            treeWalker.WalkInNode(declaration);
-
-            var csharpCode = visitor.BuildCSharpNormalisedCode();
-            var cshC = @"using Godot;
+            var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
 
@@ -115,10 +76,36 @@ namespace Generated
     {
     }
 }";
+            var @namespace = "Generated";
+            var className = "123Te@&s-t @_Class";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code, @namespace, className);
 
-            Debug.WriteLine("Сгенерированный код:\n" + csharpCode + "\n");
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
 
-            Assert.AreEqual(cshC, csharpCode);
+        [TestMethod]
+        public void ClassNameTest4()
+        {
+            var code = @"
+tool
+extends ResourceFormatSaver
+";
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    [Tool]
+    public class Test_class : ResourceFormatSaver
+    {
+    }
+}";
+            var @namespace = "Generated";
+            var className = "test_class";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code, @namespace, className);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
     }
 }

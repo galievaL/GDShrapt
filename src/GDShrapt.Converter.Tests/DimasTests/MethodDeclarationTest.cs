@@ -1,14 +1,13 @@
-﻿using GDShrapt.Reader;
+﻿using GDShrapt.Converter.Tests.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests.Tests
+namespace GDShrapt.Converter.Tests.DimasTests
 {
     [TestClass]
     public class MethodDeclarationTest : Test
     {
         [TestMethod]
-        public void MethodDeclarationTest1()
+        public void MethodDeclaration_Test1()
         {
             var code = @"
 class_name Builder
@@ -38,7 +37,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void MethodDeclarationTest2()
+        public void MethodDeclaration_Test2()
         {
             var code = @"
 class_name MyMath
@@ -69,7 +68,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void MethodDeclarationTest3()
+        public void MethodDeclaration_Test3()
         {
             var code = @"
 class_name MyMath
@@ -100,7 +99,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void MethodDeclarationTest4()
+        public void MethodDeclaration_Test4()
         {
             var code = @"
 class_name MyMath
@@ -131,7 +130,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void MethodDeclarationTest5()
+        public void MethodDeclaration_Test5()
         {
             var code = @"
 class_name Helper
@@ -162,7 +161,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void MethodDeclarationTest6()
+        public void MethodDeclaration_Test6()
         {
             var code = @"
 class_name Helper
@@ -199,7 +198,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void MethodDeclarationTest7()
+        public void MethodDeclaration_Test7()
         {
             var code = @"
 class_name Helper
@@ -231,7 +230,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void MethodDeclarationTest8()
+        public void MethodDeclaration_Test8()
         {
             var code = @"
 class_name Helper
@@ -272,7 +271,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void MethodDeclarationTest9()
+        public void MethodDeclaration_Test9()
         {
             var code = @"
 class_name Helper
@@ -305,7 +304,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void MethodDeclarationTest10()
+        public void MethodDeclaration_Test10()
         {
             var code = @"
 class_name Helper
@@ -327,7 +326,7 @@ namespace Generated
     {
         public Variant CreateValue(Variant parameter)
         {
-            var a = 2.Add(parameter);
+            var a = ((Variant)2).Add(parameter);
             return a;
         }
     }
