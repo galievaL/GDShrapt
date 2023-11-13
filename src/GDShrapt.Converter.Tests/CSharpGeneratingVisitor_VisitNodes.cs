@@ -67,17 +67,14 @@ namespace GDShrapt.Converter.Tests
                 {
                     type = GetTypeVariable(methodNameText, isThereColon, d.Type, isConst);
                     modifiers = GetModifier(methodNameText, isConst);
-
-                    //literalExpression = GetArgumentToMethodExpressionSyntax(methodNameIdentifier, arguments);
                     member = GetVariableDeclaration(identifier, type, modifiers);
 
-                    //var stringLiteral = LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("get_name"));
-                    var stringLiteral2 = GetLiteralExpression(methodNameText);
+                    var stringLiteral = GetLiteralExpression(methodNameText);//Literal("get_name"));
 
                     //var callInvocation = InvocationExpression(IdentifierName("Call")).AddArgumentListArguments(Argument(stringLiteral2));
                     //var expressionStatement = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), callInvocation));
 
-                    var expressionStatement = GetInvocationExpressionStatement(identifier, "Call", Argument(stringLiteral2));
+                    var expressionStatement = GetInvocationExpressionStatement(identifier, stringLiteral, "Call", arguments.ToArray());
 
                     foreach (var c in _constructorCollection)
                         AddConstructor(c.Key, expressionStatement);

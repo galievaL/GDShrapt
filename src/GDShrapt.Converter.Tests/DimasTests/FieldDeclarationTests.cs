@@ -78,8 +78,7 @@ namespace Generated
     public class Builder
     {
         public Variant Value;
-
-        public Builder() 
+        public Builder()
         {
             Value = Call(""some_func"");
         }
@@ -111,12 +110,10 @@ namespace Generated
     public class Builder
     {
         public double Value;
-
         public Builder() 
         {
             Value = GetValue();
         } 
-
         public double GetValue()
         {
             return 0.0;
@@ -153,6 +150,38 @@ namespace Generated
         public HTerrainDataSaver() 
         {
             Position = new Vector2(Call(""MyMethod"", 15L), 20L);    
+        }
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+        [TestMethod]
+        public void FieldDeclaration_Test4_2()
+        {
+            var code = @"
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
+
+var position = MyVector2(MyMethod(15), 20)
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
+    {
+        public Variant Position;
+
+        public HTerrainDataSaver() 
+        {
+            Position = Call(""MyVector2"", Call(""MyMethod"", 15L), 20L);
         }
     }
 }";
@@ -238,7 +267,6 @@ namespace Generated
     public class HTerrainDataSaver : ResourceFormatSaver
     {
         public Variant Position;
-
         public HTerrainDataSaver()
         {
             Position = Call(""Hhhh"", 11.5, 20L);
@@ -262,22 +290,21 @@ namespace Generated
     ";
 
             var csharpCodeExpectedResult = @"using Godot;
-    using System;
-    using System.Linq;
+using System;
+using System.Linq;
 
-    namespace Generated
+namespace Generated
+{
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
     {
-        [Tool]
-        public class HTerrainDataSaver : ResourceFormatSaver
+        public Variant Position;
+        public HTerrainDataSaver()
         {
-            public Variant Position;
-
-            public HTerrainDataSaver()
-            {
-                Position = Call(""Hhhh"", 11.5, 20L);
-            }
+            Position = Call(""Hhhh"", 11.5, 20L);
         }
-    }";
+    }
+}";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
 
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);

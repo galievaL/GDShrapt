@@ -77,17 +77,11 @@ namespace GDShrapt.Converter.Tests
 
             return ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifierType), objectCreationExpression));
         }
-        ExpressionStatementSyntax GetInvocationExpressionStatement(string identifierType, string initializerType, params ArgumentSyntax[] argumentsOfInitializer)
+        ExpressionStatementSyntax GetInvocationExpressionStatement(string identifierType, LiteralExpressionSyntax methodName, string initializerType = "Call", params ArgumentSyntax[] argumentsOfInitializer)
         {
-            //var callInvocation = InvocationExpression(IdentifierName("Call")).AddArgumentListArguments(Argument(GetLiteralExpression(methodNameText)));
-            //ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName("Name"), callInvocation))
-
-            //identifierType = "Name";
-            //initializerType = IdentifierName("Call");
-            //argumentsOfInitializer = Argument(GetLiteralExpression(methodNameText));
-
-            //var objectCreationExpression = InvocationExpression(IdentifierName("Call")).AddArgumentListArguments(argumentsOfInitializer);
-            var objectCreationExpression = InvocationExpression(IdentifierName(initializerType)).AddArgumentListArguments(argumentsOfInitializer);
+            var objectCreationExpression = InvocationExpression(IdentifierName(initializerType))
+                        .AddArgumentListArguments(Argument(methodName))
+                        .AddArgumentListArguments(argumentsOfInitializer);
 
             return ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifierType), objectCreationExpression));
         }

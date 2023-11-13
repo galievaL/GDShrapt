@@ -173,22 +173,22 @@ namespace GDShrapt.Converter.Tests
             return literalExpression;
         }
 
-        string AdaptationToStandartMethods(string methodName)
-        {
-            switch (methodName)
-            {
-                case "Vector2i":
-                    return "Vector2I";
-                case "Vector3i":
-                    return "Vector3I";
-                case "Vector4i":
-                    return "Vector4I";
-                case "Rect2i":
-                    return "Rect2I";
-                default:
-                    return ValidateTypeAndNameHelper.GetValidateType(methodName);
-            }
-        }
+        //string AdaptationToStandartMethods(string methodName)
+        //{
+        //    switch (methodName)
+        //    {
+        //        case "Vector2i":
+        //            return "Vector2I";
+        //        case "Vector3i":
+        //            return "Vector3I";
+        //        case "Vector4i":
+        //            return "Vector4I";
+        //        case "Rect2i":
+        //            return "Rect2I";
+        //        default:
+        //            return ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(methodName);
+        //    }
+        //}
 
         LiteralExpressionSyntax GetLiteralExpression(GDNumberExpression numberExpression, GDNumberType? type = null)
         {
@@ -269,11 +269,15 @@ namespace GDShrapt.Converter.Tests
             else if (isThereConst || isThereColon)
             {
                 if (isThereColon && (variableDeclarationType != null))
-                    return IdentifierName(AdaptationToStandartMethods(variableDeclarationType.ToString()));
+                    return IdentifierName(ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(variableDeclarationType.ToString()));
                 else if (kind != null)
                     return PredefinedType(Token(kind.Value));
+                else if (ValidateTypeAndNameHelper.IsItGodotType(methodName) || ValidateTypeAndNameHelper.IsItSharpType(methodName))
+                {
+                    return IdentifierName(ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(methodName));
+                }
                 else
-                    return IdentifierName(AdaptationToStandartMethods(methodName));
+                    return IdentifierName("Variant");
             }
             else
                 return IdentifierName("Variant");
