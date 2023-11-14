@@ -30,6 +30,37 @@ namespace GDShrapt.Converter.Tests
         //    return ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifierType), objectCreationExpression));
         //}
 
+        void AAAaaa(GDIdentifier methodNameIdentifier)
+        {
+            var methodName = methodNameIdentifier.ToString();
+            var gdIdent = new GDIdentifier();
+            ExpressionStatementSyntax expressionStatement = default;
+
+            if (methodName == "Vector2" || methodName == "Vector3" || methodName == "Vector4" || methodName == "Rect2" ||
+                methodName == "Vector2I" || methodName == "Vector3I" || methodName == "Vector4I" || methodName == "Rect2I")
+            {
+                var expressionSyntax = CreateMethodObjectCreationExpressionSyntax(methodName);
+                literalExpression = ReplaceArgumentsInExpressionSyntax(expressionSyntax, arguments);
+            }
+            else if (methodName == "preload")
+            {
+                var expressionSyntax = CreateMethodInvocationExpressionSyntax("ResourceLoader", "Load");
+                literalExpression = AddArgumentToExpressionSyntax(expressionSyntax, arguments);
+
+            }
+            else if (methodNameIdentifier.TryExtractLocalScopeVisibleDeclarationFromParents(out gdIdent))
+            {
+                ///ToDo: дописать
+            }
+            else
+            {
+                //var expressionSyntax = CreateMethodInvocationExpressionSyntax("Call");
+                //literalExpression = AddArgumentToExpressionSyntax(expressionSyntax, arguments);
+
+                expressionStatement = GetInvocationExpressionStatement(identifier, stringLiteral, "Call", arguments.ToArray());
+            }
+        }
+
         public void Visit(GDVariableDeclaration d)
         {
             var kk = d.Type;
@@ -74,6 +105,8 @@ namespace GDShrapt.Converter.Tests
                     //var callInvocation = InvocationExpression(IdentifierName("Call")).AddArgumentListArguments(Argument(stringLiteral2));
                     //var expressionStatement = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), callInvocation));
 
+                    AAAaaa(methodNameIdentifier);
+
                     var expressionStatement = GetInvocationExpressionStatement(identifier, stringLiteral, "Call", arguments.ToArray());
 
                     foreach (var c in _constructorCollection)
@@ -81,8 +114,6 @@ namespace GDShrapt.Converter.Tests
 
                     if (!_constructorCollection.ContainsKey(new ParameterListTKey()))
                         AddConstructor(new ParameterListTKey(), expressionStatement);
-
-
                 }
             }
             else

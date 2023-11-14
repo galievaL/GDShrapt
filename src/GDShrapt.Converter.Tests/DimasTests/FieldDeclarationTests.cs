@@ -149,7 +149,7 @@ namespace Generated
 
         public HTerrainDataSaver() 
         {
-            Position = new Vector2(Call(""MyMethod"", 15L), 20L);    
+            Position = new Vector2(Call(""MyMethod"", 15L), 20L);
         }
     }
 }";
@@ -157,6 +157,7 @@ namespace Generated
 
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
+
         [TestMethod]
         public void FieldDeclaration_Test4_2()
         {
@@ -178,7 +179,6 @@ namespace Generated
     public class HTerrainDataSaver : ResourceFormatSaver
     {
         public Variant Position;
-
         public HTerrainDataSaver() 
         {
             Position = Call(""MyVector2"", Call(""MyMethod"", 15L), 20L);
@@ -227,6 +227,34 @@ class_name HTerrainDataSaver
 extends ResourceFormatSaver
 
 var HTerrainData = preload(""./ hterrain_data.gd"")
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
+    {
+        public Resource HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclaration_Test5_3()
+        {
+            var code = @"
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
+
+var HTerrainData := preload(""./ hterrain_data.gd"")
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
