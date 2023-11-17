@@ -1,19 +1,22 @@
 ﻿using GDShrapt.Converter.Tests.Tests;
+using GDShrapt.Reader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests.DimasTests
+namespace GDShrapt.Converter.Tests.Tests2
 {
     [TestClass]
-    public class NonVariantFieldDeclarationTest : Test
+    public class FieldDeclarationTests_NestedTypes : Test
     {
         [TestMethod]
-        public void NonVariantFieldDeclaration_Test1()
+        public void FieldDeclarationTests_NestedTypes_Test1()
         {
-            // Двоеточие перед равно означает, что тип выводится из правой части.
             var code = @"
-class_name Builder
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
 
-var value := Vector2(0, 0)
+var position = Vector2(MyMethod(15), 20)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -22,9 +25,14 @@ using System.Linq;
 
 namespace Generated
 {
-    public class Builder
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public Vector2 Value = new Vector2(0L, 0L);
+        public Variant Position;
+        public HTerrainDataSaver() 
+        {
+            Position = new Vector2(Call(""MyMethod"", 15L), 20L);
+        }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -33,13 +41,14 @@ namespace Generated
         }
 
         [TestMethod]
-        public void NonVariantFieldDeclaration_Test2()
+        public void FieldDeclarationTests_NestedTypes_Test2()
         {
-            // Если тип не выводится из правой части, то это Variant
             var code = @"
-class_name Builder
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
 
-var value = Vector2(0, 0)
+var position = MyVector2(MyMethod(15), 20)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -48,9 +57,14 @@ using System.Linq;
 
 namespace Generated
 {
-    public class Builder
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public Variant Value = new Vector2(0L, 0L);
+        public Variant Position;
+        public HTerrainDataSaver()
+        {
+            Position = Call(""MyVector2"", Call(""MyMethod"", 15L), 20L);
+        }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -59,13 +73,14 @@ namespace Generated
         }
 
         [TestMethod]
-        public void NonVariantFieldDeclaration_Test3()
+        public void FieldDeclarationTests_NestedTypes_Test3()
         {
-            // Если в коде присутствует указание типа, то он сохраняется в C#
             var code = @"
-class_name Builder
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
 
-var value: Vector2i = Vector2(0, 0)
+var position = MyMethod(""string"", MyMethod(15), 20)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -74,9 +89,14 @@ using System.Linq;
 
 namespace Generated
 {
-    public class Builder
+    [Tool]
+    public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public Vector2I Value = new Vector2(0L, 0L);
+        public Variant Position;
+        public HTerrainDataSaver()
+        {
+            Position = Call(""MyMethod"", ""string"", Call(""MyMethod"", 15L), 20L);
+        }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -85,12 +105,12 @@ namespace Generated
         }
 
         [TestMethod]
-        public void NonVariantFieldDeclaration_Test4()
+        public void FieldDeclarationTests_NestedTypes_Test4()
         {
             var code = @"
 class_name Builder
 
-var const = Vector2(0, 0)
+var value := Vector2(get_x(), get_y())
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -101,7 +121,12 @@ namespace Generated
 {
     public class Builder
     {
-        public Variant @const = new Vector2(0L, 0L);
+        public Vector2 Value;
+
+        public Builder() 
+        {
+            Value = new Vector2(Call(""get_x""), Call(""get_y""));
+        }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -110,13 +135,12 @@ namespace Generated
         }
 
         [TestMethod]
-        public void NonVariantFieldDeclaration_Test5()
+        public void FieldDeclarationTests_NestedTypes_Test5()
         {
-            // Двоеточие перед равно означает, что тип выводится из правой части.
             var code = @"
 class_name Builder
 
-var value := ""строка""
+var value := Vector2(make(5), random())
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -127,7 +151,12 @@ namespace Generated
 {
     public class Builder
     {
-        public string Value = ""строка"";
+        public Vector2 Value;
+
+        public Builder() 
+        {
+            Value = new Vector2(Call(""make"", 5), Call(""random""));
+        }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -136,13 +165,15 @@ namespace Generated
         }
 
         [TestMethod]
-        public void NonVariantFieldDeclaration_Test6()
+        public void FieldDeclarationTests_NestedTypes_Test6()
         {
-            // Если тип не выводится из правой части, то это Variant
             var code = @"
 class_name Builder
 
-var value = ""строка""
+var value := Vector2(0, random())
+
+func random():
+    return 10
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -153,7 +184,17 @@ namespace Generated
 {
     public class Builder
     {
-        public Variant Value = ""строка"";
+        public Vector2 Value;
+
+        public Builder() 
+        {
+            Value = new Vector2(0, Random());
+        }
+
+        public long Random()
+        {
+            return 10;
+        }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);

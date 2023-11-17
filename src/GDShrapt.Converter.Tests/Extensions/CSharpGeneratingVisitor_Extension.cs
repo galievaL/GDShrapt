@@ -35,6 +35,7 @@ namespace GDShrapt.Converter.Tests
                     {
                         helper.AddArgumentLiteralExpressionSyntax(Argument(GetLiteralExpression(n, helper).LiteralExpressionSyntax));
                     }
+
                     var dd = GetArgumentToMethodExpressionSyntax(ident, helper.GetArgumentLiteralExpressionSyntax());
                     helper.AddArgumentLiteralExpressionSyntax(Argument(dd));
 
@@ -266,7 +267,10 @@ namespace GDShrapt.Converter.Tests
         TypeSyntax GetTypeVariable(string methodName, bool isThereColon, GDType variableDeclarationType, bool isThereConst, SyntaxKind? kind = null)
         {
             if (methodName == "preload")
-                return IdentifierName("Resource");
+                if (isThereColon && (variableDeclarationType != null))
+                    return IdentifierName(ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(variableDeclarationType.ToString()));
+                else
+                    return IdentifierName("Resource");
             else if (isThereConst || isThereColon)
             {
                 if (isThereColon && (variableDeclarationType != null))
@@ -288,7 +292,7 @@ namespace GDShrapt.Converter.Tests
         {
             if (isConst)
             {
-                if (methodName == "preload")
+                if (methodName == "preload" || ValidateTypeAndNameHelper.IsItGodotType(methodName) || ValidateTypeAndNameHelper.IsItSharpType(methodName))
                     return TokenList(Token(accessModifier), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.ReadOnlyKeyword));
                 else
                     return TokenList(Token(accessModifier), Token(SyntaxKind.ConstKeyword));

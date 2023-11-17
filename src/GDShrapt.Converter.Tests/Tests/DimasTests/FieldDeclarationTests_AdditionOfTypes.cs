@@ -1,18 +1,20 @@
 ﻿using GDShrapt.Converter.Tests.Tests;
+using GDShrapt.Reader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests.DimasTests
+namespace GDShrapt.Converter.Tests.Tests
 {
     [TestClass]
-    public class FieldCallExpresionDeclarationTest : Test
+    public class FieldDeclarationTests_AdditionOfTypes : Test
     {
         [TestMethod]
-        public void FieldCallExpresionDeclarationTest1()
+        public void FieldDeclarationTests_AdditionOfTypes_Test1()
         {
             var code = @"
 class_name Builder
 
-var value := Vector2().rotated(90)
+var name := ""Hello "" + "" World""
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -23,7 +25,7 @@ namespace Generated
 {
     public class Builder
     {
-        public Vector2 Value = new Vector2().Rotated(90);
+        public string Name = ""Hello "" + "" World"";
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -32,12 +34,12 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldCallExpresionDeclarationTest2()
+        public void FieldDeclarationTests_AdditionOfTypes_Test2()
         {
             var code = @"
 class_name Builder
 
-var value := Vector2(get_x(), get_y())
+var value := 2 + 0.33
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -48,12 +50,7 @@ namespace Generated
 {
     public class Builder
     {
-        public Vector2 Value;
-
-        public Builder() 
-        {
-            Value = new Vector2(Call(""get_x""), Call(""get_y""));
-        }
+        public double Value = 2 + 0.33;
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -62,12 +59,15 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldCallExpresionDeclarationTest3()
+        public void FieldDeclarationTests_AdditionOfTypes_Test3()
         {
             var code = @"
 class_name Builder
 
-var value := Vector2(make(5), random())
+var value := get_value() + get_value2()
+
+func get_value(): 
+    return 0.0
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -78,42 +78,16 @@ namespace Generated
 {
     public class Builder
     {
-        public Vector2 Value;
+        public Variant Value;
 
         public Builder() 
         {
-            Value = new Vector2(Call(""make"", 5), Call(""random""));
-        }
-    }
-}";
-            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+            Value = GetValue().Add(Call(""get_value2""));
+        } 
 
-            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
-        }
-
-
-        [TestMethod]
-        public void FieldCallExpresionDeclarationTest4()
+        public double GetValue()
         {
-            var code = @"
-class_name Builder
-
-var value := Vector2(0, random(random())).updated()
-";
-
-            var csharpCodeExpectedResult = @"using Godot;
-using System;
-using System.Linq;
-
-namespace Generated
-{
-    public class Builder
-    {
-        public Vector2 Value;
-
-        public Builder() 
-        {
-            Value = new Vector2(0, Call(""random"", Call(""random""))).Updated();
+            return 0.0;
         }
     }
 }";
@@ -123,15 +97,18 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldCallExpresionDeclarationTest5()
+        public void FieldDeclarationTests_AdditionOfTypes_Test4()
         {
             var code = @"
 class_name Builder
 
-var value := Vector2(0, random())
+var value: Float = get_value() + get_value2()
 
-func random():
-    return 10
+func get_value(): 
+    return 0.0
+
+func get_value2(): 
+    return 0
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -142,16 +119,21 @@ namespace Generated
 {
     public class Builder
     {
-        public Vector2 Value;
+        public double Value;
 
         public Builder() 
         {
-            Value = new Vector2(0, Random());
+            Value = GetValue() + GetValue2();
+        } 
+
+        public double GetValue()
+        {
+            return 0.0;
         }
 
-        public long Random()
+        public long GetValue2()
         {
-            return 10;
+            return 0;
         }
     }
 }";

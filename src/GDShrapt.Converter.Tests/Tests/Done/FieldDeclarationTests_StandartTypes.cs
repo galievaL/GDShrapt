@@ -1,18 +1,20 @@
 ﻿using GDShrapt.Converter.Tests.Tests;
+using GDShrapt.Reader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests.DimasTests
+namespace GDShrapt.Converter.Tests.Tests.Done
 {
     [TestClass]
-    public class AdditionOfTypesFieldDeclaration : Test
+    public class FieldDeclarationTests_StandartTypes : Test
     {
         [TestMethod]
-        public void AdditionOfTypesFieldDeclaration_Test1()
+        public void FieldDeclarationTests_StandartTypes_Test1()
         {
             var code = @"
 class_name Builder
 
-var name := ""Hello "" + "" World""
+var value = Vector2(0, 0)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -23,7 +25,7 @@ namespace Generated
 {
     public class Builder
     {
-        public string Name = ""Hello "" + "" World"";
+        public Variant Value = new Vector2(0L, 0L);
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -32,12 +34,12 @@ namespace Generated
         }
 
         [TestMethod]
-        public void AdditionOfTypesFieldDeclaration_Test2()
+        public void FieldDeclarationTests_StandartTypes_Test2()
         {
             var code = @"
 class_name Builder
 
-var value := 2 + 0.33
+var value := Vector2(0, 0)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -48,7 +50,7 @@ namespace Generated
 {
     public class Builder
     {
-        public double Value = 2 + 0.33;
+        public Vector2 Value = new Vector2(0L, 0L);
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -57,15 +59,13 @@ namespace Generated
         }
 
         [TestMethod]
-        public void AdditionOfTypesFieldDeclaration_Test3()
+        public void FieldDeclarationTests_StandartTypes_Test3()
         {
+            // Если в коде присутствует указание типа, то он сохраняется в C#
             var code = @"
 class_name Builder
 
-var value := get_value() + get_value2()
-
-func get_value(): 
-    return 0.0
+var value: Vector2i = Vector2(0, 0)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -76,17 +76,7 @@ namespace Generated
 {
     public class Builder
     {
-        public Variant Value;
-
-        public Builder() 
-        {
-            Value = GetValue().Add(Call(""get_value2""));
-        } 
-
-        public double GetValue()
-        {
-            return 0.0;
-        }
+        public Vector2I Value = new Vector2(0L, 0L);
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -95,18 +85,12 @@ namespace Generated
         }
 
         [TestMethod]
-        public void AdditionOfTypesFieldDeclaration_Test4()
+        public void FieldDeclarationTests_StandartTypes_Test4()
         {
             var code = @"
 class_name Builder
 
-var value: Float = get_value() + get_value2()
-
-func get_value(): 
-    return 0.0
-
-func get_value2(): 
-    return 0
+const value = Vector2(0, 0)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -117,28 +101,12 @@ namespace Generated
 {
     public class Builder
     {
-        public double Value;
-
-        public Builder() 
-        {
-            Value = GetValue() + GetValue2();
-        } 
-
-        public double GetValue()
-        {
-            return 0.0;
-        }
-
-        public long GetValue2()
-        {
-            return 0;
-        }
+        public static readonly Vector2 Value = new Vector2(0L, 0L);
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
 
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
-
     }
 }

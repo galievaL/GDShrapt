@@ -1,18 +1,20 @@
 ﻿using GDShrapt.Converter.Tests.Tests;
+using GDShrapt.Reader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests.DimasTests
+namespace GDShrapt.Converter.Tests.Tests2
 {
     [TestClass]
-    public class FieldDeclarationTests : Test
+    public class FieldDeclarationTests_OtherTypes : Test
     {
         [TestMethod]
-        public void FieldDeclaration_Test1()
+        public void FieldDeclarationTests_OtherTypes_Test1()
         {
             var code = @"
 class_name Builder
 
-var name := ""Hello""
+var name = my_method()
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -23,35 +25,10 @@ namespace Generated
 {
     public class Builder
     {
-        public string Name = ""Hello"";
-    }
-}";
-            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
-
-            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
-        }
-
-        [TestMethod]
-        public void FieldDeclaration_Test2()
-        {
-            var code = @"
-class_name Builder
-
-var name: String = get_name()
-";
-
-            var csharpCodeExpectedResult = @"using Godot;
-using System;
-using System.Linq;
-
-namespace Generated
-{
-    public class Builder
-    {
-        public string Name;
+        public Variant Name;
         public Builder()
         {
-            Name = Call(""get_name"");
+            Name = Call(""my_method"");
         }
     }
 }";
@@ -61,7 +38,36 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldDeclaration_Test2_2()
+        public void FieldDeclarationTests_OtherTypes_Test2()
+        {
+            var code = @"
+class_name Builder
+
+var name := my_method()
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public Variant Name;
+        public Builder()
+        {
+            Name = Call(""my_method"");
+        }
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTests_OtherTypes_Test3()
         {
             // Если тип не выводится из правой части, то это Variant
             var code = @"
@@ -90,7 +96,36 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldDeclaration_Test3()
+        public void FieldDeclarationTests_OtherTypes_Test4()
+        {
+            var code = @"
+class_name Builder
+
+var name: String = my_method()
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public string Name;
+        public Builder()
+        {
+            Name = Call(""my_method"");
+        }
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTests_OtherTypes_Test5()
         {
             var code = @"
 class_name Builder
@@ -112,9 +147,9 @@ namespace Generated
         public double Value;
         public Builder() 
         {
-            Value = GetValue();
-        } 
-        public double GetValue()
+            Value = Get_value();
+        }
+        public double Get_value()
         {
             return 0.0;
         }
@@ -126,156 +161,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldDeclaration_Test4()
-        {
-            var code = @"
-tool
-class_name HTerrainDataSaver
-extends ResourceFormatSaver
-
-var position = Vector2(MyMethod(15), 20)
-";
-
-            var csharpCodeExpectedResult = @"using Godot;
-using System;
-using System.Linq;
-
-namespace Generated
-{
-    [Tool]
-    public class HTerrainDataSaver : ResourceFormatSaver
-    {
-        public Variant Position;
-
-        public HTerrainDataSaver() 
-        {
-            Position = new Vector2(Call(""MyMethod"", 15L), 20L);
-        }
-    }
-}";
-            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
-
-            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
-        }
-
-        [TestMethod]
-        public void FieldDeclaration_Test4_2()
-        {
-            var code = @"
-tool
-class_name HTerrainDataSaver
-extends ResourceFormatSaver
-
-var position = MyVector2(MyMethod(15), 20)
-";
-
-            var csharpCodeExpectedResult = @"using Godot;
-using System;
-using System.Linq;
-
-namespace Generated
-{
-    [Tool]
-    public class HTerrainDataSaver : ResourceFormatSaver
-    {
-        public Variant Position;
-        public HTerrainDataSaver() 
-        {
-            Position = Call(""MyVector2"", Call(""MyMethod"", 15L), 20L);
-        }
-    }
-}";
-            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
-
-            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
-        }
-
-        [TestMethod]
-        public void FieldDeclaration_Test5_1()
-        {
-            var code = @"
-tool
-class_name HTerrainDataSaver
-extends ResourceFormatSaver
-
-const HTerrainData = preload(""./ hterrain_data.gd"")
-";
-
-            var csharpCodeExpectedResult = @"using Godot;
-using System;
-using System.Linq;
-
-namespace Generated
-{
-    [Tool]
-    public class HTerrainDataSaver : ResourceFormatSaver
-    {
-        public static readonly Resource HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
-    }
-}";
-            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
-
-            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
-        }
-
-        [TestMethod]
-        public void FieldDeclaration_Test5_2()
-        {
-            var code = @"
-tool
-class_name HTerrainDataSaver
-extends ResourceFormatSaver
-
-var HTerrainData = preload(""./ hterrain_data.gd"")
-";
-
-            var csharpCodeExpectedResult = @"using Godot;
-using System;
-using System.Linq;
-
-namespace Generated
-{
-    [Tool]
-    public class HTerrainDataSaver : ResourceFormatSaver
-    {
-        public Resource HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
-    }
-}";
-            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
-
-            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
-        }
-
-        [TestMethod]
-        public void FieldDeclaration_Test5_3()
-        {
-            var code = @"
-tool
-class_name HTerrainDataSaver
-extends ResourceFormatSaver
-
-var HTerrainData := preload(""./ hterrain_data.gd"")
-";
-
-            var csharpCodeExpectedResult = @"using Godot;
-using System;
-using System.Linq;
-
-namespace Generated
-{
-    [Tool]
-    public class HTerrainDataSaver : ResourceFormatSaver
-    {
-        public Resource HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
-    }
-}";
-            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
-
-            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
-        }
-
-        [TestMethod]
-        public void FieldDeclaration_Test6()
+        public void FieldDeclarationTests_OtherTypes_Test6()
         {
             var code = @"
 tool
@@ -307,7 +193,7 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldDeclaration_Test7()
+        public void FieldDeclarationTests_OtherTypes_Test7()
         {
             var code = @"
     tool
@@ -330,6 +216,35 @@ namespace Generated
         public HTerrainDataSaver()
         {
             Position = Call(""Hhhh"", 11.5, 20L);
+        }
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTests_OtherTypes_Test8____________________()//ToDo: Дождаться того, когда Дима продумает решение для этого случая
+        {
+            var code = @"
+class_name Builder
+
+const name = get_name()
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public static readonly Variant Name;
+        public Builder()
+        {
+            Name = Call(""get_name"");
         }
     }
 }";

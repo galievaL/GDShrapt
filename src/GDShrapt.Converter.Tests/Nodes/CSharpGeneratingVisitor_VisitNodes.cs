@@ -29,12 +29,15 @@ namespace GDShrapt.Converter.Tests
         //    var objectCreationExpression = ObjectCreationExpression(initializerType).AddArgumentListArguments(argumentsOfInitializer);
         //    return ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifierType), objectCreationExpression));
         //}
-
-        void AAAaaa(GDIdentifier methodNameIdentifier)
+        /*
+        void AAAaaa(GDIdentifier methodNameIdentifier, List<ArgumentSyntax> arguments)
         {
+            MemberDeclarationSyntax member = default;
+            ExpressionSyntax literalExpression = default;
+
             var methodName = methodNameIdentifier.ToString();
-            var gdIdent = new GDIdentifier();
             ExpressionStatementSyntax expressionStatement = default;
+            var gdIdent = new GDIdentifier();
 
             if (methodName == "Vector2" || methodName == "Vector3" || methodName == "Vector4" || methodName == "Rect2" ||
                 methodName == "Vector2I" || methodName == "Vector3I" || methodName == "Vector4I" || methodName == "Rect2I")
@@ -59,7 +62,8 @@ namespace GDShrapt.Converter.Tests
 
                 expressionStatement = GetInvocationExpressionStatement(identifier, stringLiteral, "Call", arguments.ToArray());
             }
-        }
+            return member;
+        }*/
 
         public void Visit(GDVariableDeclaration d)
         {
@@ -92,6 +96,7 @@ namespace GDShrapt.Converter.Tests
                     type = GetTypeVariable(methodNameText, isThereColon, d.Type, isConst);
                     literalExpression = GetArgumentToMethodExpressionSyntax(methodNameIdentifier, arguments);
                     modifiers = GetModifier(methodNameText, isConst);
+
                     member = GetVariableDeclaration(identifier, type, literalExpression, modifiers);
                 }
                 else
@@ -105,15 +110,14 @@ namespace GDShrapt.Converter.Tests
                     //var callInvocation = InvocationExpression(IdentifierName("Call")).AddArgumentListArguments(Argument(stringLiteral2));
                     //var expressionStatement = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), callInvocation));
 
-                    AAAaaa(methodNameIdentifier);
+                    //AAAaaa(methodNameIdentifier, arguments);
 
                     var expressionStatement = GetInvocationExpressionStatement(identifier, stringLiteral, "Call", arguments.ToArray());
 
-                    foreach (var c in _constructorCollection)
-                        AddConstructor(c.Key, expressionStatement);
+                    AddToAllExistingConstructors(expressionStatement);
 
-                    if (!_constructorCollection.ContainsKey(new ParameterListTKey()))
-                        AddConstructor(new ParameterListTKey(), expressionStatement);
+                    //добавляем нулевой конструктор, если его нет и записываем в него инициализацию
+                    AddConstructor(new ParameterListTKey(), expressionStatement);
                 }
             }
             else

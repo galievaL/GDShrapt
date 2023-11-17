@@ -33,37 +33,6 @@ namespace GDShrapt.Converter.Tests
             return GetVariableDeclaration(name, arrayType, initializer, modifiers);
         }
 
-        ConstructorDeclarationSyntax GetConstructorDeclaration(List<ParameterSyntax> parametrs = null, SyntaxKind accessModifier = SyntaxKind.PublicKeyword, params ExpressionStatementSyntax[] expressionStatementSyntaxes)
-        {
-            var constrDecl = ConstructorDeclaration(_className)
-                            .WithBody(Block(expressionStatementSyntaxes))
-                            .AddModifiers(Token(accessModifier));
-
-            if (parametrs != null)
-                constrDecl.AddParameterListParameters(parametrs.ToArray());
-
-            return constrDecl;
-        }
-
-        void AddConstructor(ParameterListTKey key, ExpressionStatementSyntax expressionStatement)
-        {
-            if (_constructorCollection.ContainsKey(key))
-                _constructorCollection[key].Add(expressionStatement);
-            else
-                _constructorCollection.Add(key, new List<ExpressionStatementSyntax> { expressionStatement });
-        }
-
-        void AddConstructor(ParameterListTKey key, List<ExpressionStatementSyntax> expressionsStatement)
-        {
-            if (_constructorCollection.ContainsKey(key))
-            {
-                var value = _constructorCollection[key].Concat(expressionsStatement).ToList();
-                _constructorCollection[key] = value;
-            }
-            else
-                _constructorCollection.Add(key, expressionsStatement);
-        }
-
         ExpressionStatementSyntax GetObjectCreationExpressionStatement(string identifierType, TypeSyntax initializerType, params ArgumentSyntax[] argumentsOfInitializer)
         {
             //var callInvocation = InvocationExpression(IdentifierName("Call")).AddArgumentListArguments(Argument(GetLiteralExpression(methodNameText)));
@@ -100,6 +69,7 @@ namespace GDShrapt.Converter.Tests
         ExpressionStatementSyntax CreateMethodInvocationExpressionSyntax(string identifierType, params ArgumentSyntax[] argumentsOfInitializer)
         {
             var objectCreationExpression = CreateMethodInvocationExpressionSyntax("get_name", "Call", argumentsOfInitializer);
+
             return ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifierType), objectCreationExpression));
         }
     }

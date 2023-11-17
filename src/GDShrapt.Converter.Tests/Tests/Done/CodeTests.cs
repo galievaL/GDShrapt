@@ -1,11 +1,12 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using GDShrapt.Converter.Tests;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace GDShrapt.Converter.Tests.Tests
+namespace GDShrapt.Converter.Tests.Tests.Done
 {
     [TestClass]
     public class CodeTests

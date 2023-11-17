@@ -17,7 +17,6 @@ namespace GDShrapt.Converter.Tests
         private CompilationUnitSyntax _compilationUnit;
 
         private string _className;
-        private Dictionary<ParameterListTKey, List<ExpressionStatementSyntax>> _constructorCollection = new Dictionary<ParameterListTKey, List<ExpressionStatementSyntax>>();
 
         public CSharpGeneratingVisitor(ConversionSettings conversionSettings)
         {
