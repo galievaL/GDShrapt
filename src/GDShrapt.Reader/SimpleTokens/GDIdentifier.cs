@@ -131,30 +131,29 @@ namespace GDShrapt.Reader
 
                 if (node is GDClassDeclaration @class)
                 {
-                    if (isStaticContext.HasValue)
+
+                    if (isStaticContext.HasValue && isStaticContext.Value)
                     {
-                        if (isStaticContext.Value)
+                        foreach (var member in @class.Members)
                         {
-                            foreach (var member in @class.Members)
+                            if (member.IsStatic && member.Identifier == this)
                             {
-                                if (member.IsStatic && member.Identifier == this)
-                                {
-                                    declaration = member.Identifier;
-                                    return true;
-                                }
+                                declaration = member.Identifier;
+                                return true;
                             }
                         }
-                        else
+                    }
+                    else
+                    {
+                        foreach (var member in @class.Members)
                         {
-                            foreach (var member in @class.Members)
+                            if (member.Identifier == this)
                             {
-                                if (member.Identifier == this)
-                                {
-                                    declaration = member.Identifier;
-                                    return true;
-                                }
+                                declaration = member.Identifier;
+                                return true;
                             }
                         }
+
                     }
 
                     break;
