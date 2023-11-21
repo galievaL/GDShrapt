@@ -144,12 +144,84 @@ namespace Generated
 {
     public class Builder
     {
-        public double Value;
+        public Variant Value;
         public Builder() 
         {
             Value = Get_value();
         }
-        public double Get_value()
+        public Variant Get_value()
+        {
+            return 0.0;
+        }
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTests_OtherTypes_Test5_1()
+        {
+            var code = @"
+class_name Builder
+
+var value := get_value()
+
+func get_value() -> float: 
+    return 0.0
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public Double Value;
+        public Builder() 
+        {
+            Value = Get_value();
+        }
+        public Double Get_value()
+        {
+            return 0.0;
+        }
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTests_OtherTypes_Test5_2()
+        {
+            var code = @"
+class_name Builder
+
+var value = get_value()
+
+func get_value() -> float: 
+    return 0.0
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public Variant Value;
+        public Builder() 
+        {
+            Value = Get_value();
+        }
+        public Double Get_value()
         {
             return 0.0;
         }
@@ -196,12 +268,12 @@ namespace Generated
         public void FieldDeclarationTests_OtherTypes_Test7()
         {
             var code = @"
-    tool
-    class_name HTerrainDataSaver
-    extends ResourceFormatSaver
+tool
+class_name HTerrainDataSaver
+extends ResourceFormatSaver
 
-    var position := Hhhh(11.5, 20)
-    ";
+var position := Hhhh(11.5, 20)
+";
 
             var csharpCodeExpectedResult = @"using Godot;
 using System;

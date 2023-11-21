@@ -13,10 +13,13 @@ namespace GDShrapt.Converter.Tests
     public class ExpressionSyntaxHelper
     {
         public LiteralExpressionSyntax LiteralExpressionSyntax;
-        List<ArgumentSyntax> _argumentLiteralExpressionSyntax = new List<ArgumentSyntax>();
+        public ArgumentSyntax ArgumentLiteralExpressionSyntax;
+        public List<ArgumentSyntax> ArgumentLiteralExpressionSyntaxList = new List<ArgumentSyntax>();
 
         public ExpressionSyntaxHelper()
         {
+            LiteralExpressionSyntax = default;
+            ArgumentLiteralExpressionSyntax = default;
         }
 
         public ExpressionSyntaxHelper(LiteralExpressionSyntax literalExpressionSyntax)
@@ -26,19 +29,15 @@ namespace GDShrapt.Converter.Tests
 
         public ExpressionSyntaxHelper(List<ArgumentSyntax> literalExpressionSyntaxes)
         {
-            _argumentLiteralExpressionSyntax = literalExpressionSyntaxes;
+            LiteralExpressionSyntax = default;
+            ArgumentLiteralExpressionSyntax = default;
+            ArgumentLiteralExpressionSyntaxList = literalExpressionSyntaxes;
         }
 
-        public void AddArgumentLiteralExpressionSyntax(ArgumentSyntax argument) =>
-            _argumentLiteralExpressionSyntax.Add(argument);
-
-        public List<ArgumentSyntax> GetArgumentLiteralExpressionSyntax() =>
-            _argumentLiteralExpressionSyntax;
-
-        public List<ArgumentSyntax> GetResultArgumentLiteralExpressionSyntax()
-        {
-            _argumentLiteralExpressionSyntax.RemoveAt(_argumentLiteralExpressionSyntax.Count - 1);
-            return _argumentLiteralExpressionSyntax;
-        }
+        //public List<ArgumentSyntax> GetResultArgumentLiteralExpressionSyntax()
+        //{
+        //    ArgumentLiteralExpressionSyntax.RemoveAt(ArgumentLiteralExpressionSyntax.Count - 1);
+        //    return ArgumentLiteralExpressionSyntax;
+        //}
     }
 }

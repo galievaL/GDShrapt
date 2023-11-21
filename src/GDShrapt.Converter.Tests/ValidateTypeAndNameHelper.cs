@@ -10,17 +10,46 @@ namespace GDShrapt.Converter.Tests
 {
     public static class ValidateTypeAndNameHelper
     {
-        public static List<string> SharpTypesList = new List<string>()
+        public static Dictionary<string, string> VariantTypesAndTheirEquivalentSharpTypes = new Dictionary<string, string>()
         {
-            "bool", "byte", "sbyte", "char", "decimal", "double",
-            "float", "int", "uint", "long", "ulong", "short",
-            "ushort", "object", "string", "void"
-        };
-
-        public static List<string> GodotTypesList = new List<string>()
-        {
-            "Vector2", "Vector3", "Vector4", "Rect2", 
-            "Vector2I", "Vector3I", "Vector4I", "Rect2I"
+            ["Nil"] = "null",
+            ["Bool"] = "bool",
+            ["Int"] = "long",
+            ["Float"] = "double",
+            ["String"] = "string",
+            ["Vector2"] = "Vector2",
+            ["Vector2i"] = "Vector2I",
+            ["Rect2"] = "Rect2",
+            ["Rect2i"] = "Rect2I",
+            ["Vector3"] = "Vector3",
+            ["Vector3i"] = "Vector3I",
+            ["Transform2D"] = "Transform2D",
+            ["Vector4"] = "Vector4",
+            ["Vector4i"] = "Vector4I",
+            ["Plane"] = "Plane",
+            ["Quaternion"] = "Quaternion",
+            ["Aabb"] = "Aabb",
+            ["Basis"] = "Basis",
+            ["Transform3D"] = "Transform3D",
+            ["Projection"] = "Projection",
+            ["Color"] = "Color",
+            ["StringName"] = "StringName",
+            ["NodePath"] = "NodePath",
+            ["Rid"] = "Rid",
+            ["Object"] = "GodotObject ",
+            ["Callable"] = "Callable",
+            ["Signal"] = "Signal",
+            ["Dictionary"] = "Collections.Dictionary",
+            ["Array"] = "Collections.Array",
+            ["PackedByteArray"] = "byte[]",
+            ["PackedInt32Array"] = "int[]",
+            ["PackedInt64Array"] = "long[]",
+            ["PackedFloat32Array"] = "float[]",
+            ["PackedFloat64Array"] = "double[]",
+            ["PackedStringArray"] = "string[]",
+            ["PackedVector2Array"] = "Vector2[]",
+            ["PackedVector3Array"] = "Vector3[]",
+            ["PackedColorArray"] = "Color[]"
         };
 
         public static string GetValidateClassName(this string name)
@@ -49,22 +78,15 @@ namespace GDShrapt.Converter.Tests
 
         public static string GetTypeAdaptationToStandartMethodsType(string typeName)
         {
-            var allTypes = SharpTypesList.Concat(GodotTypesList);
-            var type = allTypes.Where(t => string.Equals(typeName, t, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            if (VariantTypesAndTheirEquivalentSharpTypes.ContainsKey(typeName))
+                return VariantTypesAndTheirEquivalentSharpTypes[typeName];
 
-            return type == null ? typeName : type;
-        }
-
-        public static bool IsItSharpType(string typeName)
-        {
-            var type = SharpTypesList.Where(t => string.Equals(typeName, t, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            return type != null;
+            return typeName;
         }
 
         public static bool IsItGodotType(string typeName)
         {
-            var type = GodotTypesList.Where(t => string.Equals(typeName, t, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            return type != null;
+            return VariantTypesAndTheirEquivalentSharpTypes.ContainsKey(typeName);
         }
 
         static string ValidateFirstLetter(string name)

@@ -30,7 +30,7 @@ namespace GDShrapt.Converter.Tests
             var arrayType = ArrayType(predefinedType)
                     .WithRankSpecifiers(SingletonList(ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression()))));
 
-            return GetVariableDeclaration(name, arrayType, initializer, modifiers);
+            return GetVariableDeclaration(name, arrayType, modifiers, initializer);
         }
 
         ExpressionStatementSyntax GetObjectCreationExpressionStatement(string identifierType, TypeSyntax initializerType, params ArgumentSyntax[] argumentsOfInitializer)

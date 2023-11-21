@@ -48,7 +48,7 @@ tool
 class_name HTerrainDataSaver
 extends ResourceFormatSaver
 
-var position = MyVector2(MyMethod(15), 20)
+var position = MyVector2(17, MyMethod(15), 20)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -63,7 +63,7 @@ namespace Generated
         public Variant Position;
         public HTerrainDataSaver()
         {
-            Position = Call(""MyVector2"", Call(""MyMethod"", 15L), 20L);
+            Position = Call(""MyVector2"", 17L, Call(""MyMethod"", 15L), 20L);
         }
     }
 }";
@@ -122,7 +122,6 @@ namespace Generated
     public class Builder
     {
         public Vector2 Value;
-
         public Builder() 
         {
             Value = new Vector2(Call(""get_x""), Call(""get_y""));
@@ -152,7 +151,6 @@ namespace Generated
     public class Builder
     {
         public Vector2 Value;
-
         public Builder() 
         {
             Value = new Vector2(Call(""make"", 5), Call(""random""));
@@ -185,12 +183,10 @@ namespace Generated
     public class Builder
     {
         public Vector2 Value;
-
         public Builder() 
         {
             Value = new Vector2(0, Random());
         }
-
         public long Random()
         {
             return 10;
