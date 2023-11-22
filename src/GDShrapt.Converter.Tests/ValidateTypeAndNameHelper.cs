@@ -10,46 +10,46 @@ namespace GDShrapt.Converter.Tests
 {
     public static class ValidateTypeAndNameHelper
     {
-        public static Dictionary<string, string> VariantTypesAndTheirEquivalentSharpTypes = new Dictionary<string, string>()
+        public static Dictionary<string, string> VariantTypesToLowerAndTheirEquivalentSharpTypes = new Dictionary<string, string>()
         {
-            ["Nil"] = "null",
-            ["Bool"] = "bool",
-            ["Int"] = "long",
-            ["Float"] = "double",
-            ["String"] = "string",
-            ["Vector2"] = "Vector2",
-            ["Vector2i"] = "Vector2I",
-            ["Rect2"] = "Rect2",
-            ["Rect2i"] = "Rect2I",
-            ["Vector3"] = "Vector3",
-            ["Vector3i"] = "Vector3I",
-            ["Transform2D"] = "Transform2D",
-            ["Vector4"] = "Vector4",
-            ["Vector4i"] = "Vector4I",
-            ["Plane"] = "Plane",
-            ["Quaternion"] = "Quaternion",
-            ["Aabb"] = "Aabb",
-            ["Basis"] = "Basis",
-            ["Transform3D"] = "Transform3D",
-            ["Projection"] = "Projection",
-            ["Color"] = "Color",
-            ["StringName"] = "StringName",
-            ["NodePath"] = "NodePath",
-            ["Rid"] = "Rid",
-            ["Object"] = "GodotObject ",
-            ["Callable"] = "Callable",
-            ["Signal"] = "Signal",
-            ["Dictionary"] = "Collections.Dictionary",
-            ["Array"] = "Collections.Array",
-            ["PackedByteArray"] = "byte[]",
-            ["PackedInt32Array"] = "int[]",
-            ["PackedInt64Array"] = "long[]",
-            ["PackedFloat32Array"] = "float[]",
-            ["PackedFloat64Array"] = "double[]",
-            ["PackedStringArray"] = "string[]",
-            ["PackedVector2Array"] = "Vector2[]",
-            ["PackedVector3Array"] = "Vector3[]",
-            ["PackedColorArray"] = "Color[]"
+            ["nil"] = "null",
+            ["bool"] = "bool",
+            ["int"] = "long",
+            ["float"] = "double",
+            ["string"] = "string",
+            ["vector2"] = "Vector2",
+            ["vector2i"] = "Vector2I",
+            ["rect2"] = "Rect2",
+            ["rect2i"] = "Rect2I",
+            ["vector3"] = "Vector3",
+            ["vector3i"] = "Vector3I",
+            ["transform2d"] = "Transform2D",
+            ["vector4"] = "Vector4",
+            ["vector4i"] = "Vector4I",
+            ["plane"] = "Plane",
+            ["quaternion"] = "Quaternion",
+            ["aabb"] = "Aabb",
+            ["basis"] = "Basis",
+            ["transform3d"] = "Transform3D",
+            ["projection"] = "Projection",
+            ["color"] = "Color",
+            ["stringname"] = "StringName",
+            ["nodepath"] = "NodePath",
+            ["rid"] = "Rid",
+            ["object"] = "GodotObject ",
+            ["callable"] = "Callable",
+            ["signal"] = "Signal",
+            ["dictionary"] = "Collections.Dictionary",
+            ["array"] = "Collections.Array",
+            ["packedbytearray"] = "byte[]",
+            ["packedint32array"] = "int[]",
+            ["packedint64array"] = "long[]",
+            ["packedfloat32array"] = "float[]",
+            ["packedfloat64array"] = "double[]",
+            ["packedstringarray"] = "string[]",
+            ["packedvector2array"] = "Vector2[]",
+            ["packedvector3array"] = "Vector3[]",
+            ["packedcolorarray"] = "Color[]"
         };
 
         public static string GetValidateClassName(this string name)
@@ -78,15 +78,16 @@ namespace GDShrapt.Converter.Tests
 
         public static string GetTypeAdaptationToStandartMethodsType(string typeName)
         {
-            if (VariantTypesAndTheirEquivalentSharpTypes.ContainsKey(typeName))
-                return VariantTypesAndTheirEquivalentSharpTypes[typeName];
+            var type = typeName.ToLower();
+            if (VariantTypesToLowerAndTheirEquivalentSharpTypes.ContainsKey(type))
+                return VariantTypesToLowerAndTheirEquivalentSharpTypes[type];
 
             return typeName;
         }
 
         public static bool IsItGodotType(string typeName)
         {
-            return VariantTypesAndTheirEquivalentSharpTypes.ContainsKey(typeName);
+            return VariantTypesToLowerAndTheirEquivalentSharpTypes.ContainsKey(typeName.ToLower());
         }
 
         static string ValidateFirstLetter(string name)

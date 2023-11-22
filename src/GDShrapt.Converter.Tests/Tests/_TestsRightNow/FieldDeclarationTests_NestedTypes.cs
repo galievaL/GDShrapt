@@ -29,13 +29,15 @@ namespace Generated
     public class HTerrainDataSaver : ResourceFormatSaver
     {
         public Variant Position;
-        public HTerrainDataSaver() 
+        public HTerrainDataSaver()
         {
             Position = new Vector2(Call(""MyMethod"", 15L), 20L);
         }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            CompareCodeStrings(csharpCodeExpectedResult, csharpCode);
 
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
@@ -122,9 +124,9 @@ namespace Generated
     public class Builder
     {
         public Vector2 Value;
-        public Builder() 
+        public Builder()
         {
-            Value = new Vector2(Call(""get_x""), Call(""get_y""));
+            Value = new Vector2(Call(""Get_x""), Call(""Get_y""));
         }
     }
 }";
@@ -151,9 +153,9 @@ namespace Generated
     public class Builder
     {
         public Vector2 Value;
-        public Builder() 
+        public Builder()
         {
-            Value = new Vector2(Call(""make"", 5), Call(""random""));
+            Value = new Vector2(Call(""Make"", 5L), Call(""Random""));
         }
     }
 }";
@@ -183,13 +185,14 @@ namespace Generated
     public class Builder
     {
         public Vector2 Value;
-        public Builder() 
+        public Builder()
         {
-            Value = new Vector2(0, Random());
+            Value = new Vector2(0L, Random());
         }
-        public long Random()
+
+        public Variant Random()
         {
-            return 10;
+            return 10L;
         }
     }
 }";

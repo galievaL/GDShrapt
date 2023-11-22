@@ -28,7 +28,7 @@ namespace Generated
         public Variant Name;
         public Builder()
         {
-            Name = Call(""my_method"");
+            Name = Call(""My_method"");
         }
     }
 }";
@@ -57,7 +57,7 @@ namespace Generated
         public Variant Name;
         public Builder()
         {
-            Name = Call(""my_method"");
+            Name = Call(""My_method"");
         }
     }
 }";
@@ -86,7 +86,7 @@ namespace Generated
         public Variant Value;
         public Builder()
         {
-            Value = Call(""some_func"");
+            Value = Call(""Some_func"");
         }
     }
 }";
@@ -115,7 +115,7 @@ namespace Generated
         public string Name;
         public Builder()
         {
-            Name = Call(""my_method"");
+            Name = Call(""My_method"");
         }
     }
 }";
@@ -132,7 +132,7 @@ class_name Builder
 
 var value := get_value()
 
-func get_value(): 
+func get_value():
     return 0.0
 ";
 
@@ -145,13 +145,14 @@ namespace Generated
     public class Builder
     {
         public Variant Value;
-        public Builder() 
+        public Builder()
         {
             Value = Get_value();
         }
+
         public Variant Get_value()
         {
-            return 0.0;
+            return 0;
         }
     }
 }";
@@ -180,14 +181,15 @@ namespace Generated
 {
     public class Builder
     {
-        public Double Value;
-        public Builder() 
+        public double Value;
+        public Builder()
         {
             Value = Get_value();
         }
-        public Double Get_value()
+
+        public double Get_value()
         {
-            return 0.0;
+            return 0;
         }
     }
 }";
@@ -217,18 +219,20 @@ namespace Generated
     public class Builder
     {
         public Variant Value;
-        public Builder() 
+        public Builder()
         {
             Value = Get_value();
         }
-        public Double Get_value()
+
+        public double Get_value()
         {
-            return 0.0;
+            return 0;
         }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
 
+            //CompareCodeStrings(csharpCodeExpectedResult, csharpCode);
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
 
@@ -316,7 +320,7 @@ namespace Generated
         public static readonly Variant Name;
         public Builder()
         {
-            Name = Call(""get_name"");
+            Name = Call(""Get_name"");
         }
     }
 }";

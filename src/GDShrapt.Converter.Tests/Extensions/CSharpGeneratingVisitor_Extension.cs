@@ -35,10 +35,9 @@ namespace GDShrapt.Converter.Tests
                     List<ArgumentSyntax> args = new List<ArgumentSyntax>();
 
                     foreach (var p in parameters)
-                        args.Add(Argument(GetLiteralExpression(p, helper).LiteralExpressionSyntax)); //сделать сохранение в ArgumentLiteralExpressionSyntax
+                        args.Add(GetLiteralExpression(p, helper).ArgumentLiteralExpressionSyntax);
 
-                    var methodExprSyntax = GetArgumentToMethodExpressionSyntax(ident, args);
-                    helper.ArgumentLiteralExpressionSyntaxList.Add(Argument(methodExprSyntax));//сделать сохранение в ArgumentLiteralExpressionSyntax
+                    helper.ArgumentLiteralExpressionSyntax = Argument(GetArgumentToMethodExpressionSyntax(ident, args));
 
                     return helper;
                 case "GDStringExpression":
@@ -55,73 +54,42 @@ namespace GDShrapt.Converter.Tests
             }
             helper = helper ?? new ExpressionSyntaxHelper();
 
-            helper.LiteralExpressionSyntax = expr;//сделать сохранение в ArgumentLiteralExpressionSyntax
+            helper.ArgumentLiteralExpressionSyntax = Argument(expr);
 
             return helper;
         }
 
-        //ExpressionSyntax GetExpressionSyntax(GDIdentifier methodNameIdentifier)
-        //{
-        //    var methodName = methodNameIdentifier.ToString();
-
-        //    var gdIdent = new GDIdentifier();
-
-        //    if (methodName == "Vector2" || methodName == "Vector3" || methodName == "Vector4" || methodName == "Rect2" ||
-        //        methodName == "Vector2I" || methodName == "Vector3I" || methodName == "Vector4I" || methodName == "Rect2I")
-        //        return CreateMethodObjectCreationExpressionSyntax(methodName);
-        //    else if (methodName == "preload")
-        //        return CreateMethodInvocationExpressionSyntax("ResourceLoader", "Load");
-        //    else if (methodNameIdentifier.TryExtractLocalScopeVisibleDeclarationFromParents(out gdIdent))
-        //    {
-        //        //if (тип метода, которого мы нашли Variant)
-        //        //      var cc = CreateMethodInvocationExpressionSyntax(methodName, arguments); //просто пишем исходный метод без нью
-        //        //      literalExpression = AddArgumentToExpressionSyntax(cc, arguments);
-        //        //else
-        //        //literalExpression = CreateVariantCreateFromMethodInvocationExpression(arguments, "Variant", "CreateFrom");
-
-        //        return CreateMethodInvocationExpressionSyntax("Variant", "CreateFrom");
-        //    }
-        //    return CreateMethodInvocationExpressionSyntax("Variant", "From");
-        //}
-
         ExpressionSyntax GetArgumentToMethodExpressionSyntax(GDIdentifier methodNameIdentifier, List<ArgumentSyntax> arguments)
         {
             var methodName = methodNameIdentifier.ToString();
-            ExpressionSyntax literalExpression = default;
             var gdIdent = new GDIdentifier();
 
             if (methodName == "Vector2" || methodName == "Vector3" || methodName == "Vector4" || methodName == "Rect2" ||
                 methodName == "Vector2I" || methodName == "Vector3I" || methodName == "Vector4I" || methodName == "Rect2I")
             {
-                literalExpression = ObjectCreationExpression(IdentifierName(methodName))
+                return ObjectCreationExpression(IdentifierName(methodName))
                                     .WithArgumentList(ArgumentList(SeparatedList(arguments)));
             }
             else if (methodName == "preload")
             {
-                literalExpression = InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("ResourceLoader"), IdentifierName("Load")))
+                return InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("ResourceLoader"), IdentifierName("Load")))
                                     .WithArgumentList(ArgumentList(SeparatedList(arguments)));
             }
             else if (methodNameIdentifier.TryExtractLocalScopeVisibleDeclarationFromParents(out gdIdent))
             {
-                var gdIdentType = ((GDMethodDeclaration)gdIdent.Parent).ReturnType;
+                methodName = ValidateTypeAndNameHelper.GetValidateFieldName(methodName);
 
-                var argLiteralExpression = InvocationExpression(IdentifierName(methodName))
+                return InvocationExpression(IdentifierName(methodName))
                                     .WithArgumentList(ArgumentList(SeparatedList(arguments)));
-
-                literalExpression = InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("Variant"), IdentifierName("CreateFrom")))
-                                    .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(argLiteralExpression))));
             }
             else
             {
-                //var expressionSyntax = CreateMethodInvocationExpressionSyntax("Call");
-                //literalExpression = ReplaceArgumentsInExpressionSyntax(expressionSyntax, arguments);
+                methodName = ValidateTypeAndNameHelper.GetValidateFieldName(methodName);
 
-                literalExpression = InvocationExpression(IdentifierName("Call"))
+                return InvocationExpression(IdentifierName("Call"))
                                     .AddArgumentListArguments(Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(methodName))))
                                     .AddArgumentListArguments(arguments.ToArray());
             }
-
-            return literalExpression;
         }
 
         LiteralExpressionSyntax GetLiteralExpression(GDNumberExpression numberExpression, GDNumberType? type = null)
@@ -186,8 +154,11 @@ namespace GDShrapt.Converter.Tests
             }
         }
 
-        TypeSyntax GetTypeVariable(string methodName, bool isThereColon, GDType variableDeclarationType, bool isThereConst, SyntaxKind? kind = null)
+        TypeSyntax GetTypeVariable(GDIdentifier methodNameIdentifier, bool isThereColon, GDType variableDeclarationType, bool isThereConst, SyntaxKind? kind = null)
         {
+            var methodName = methodNameIdentifier.ToString();
+            var gdIdent = new GDIdentifier();
+
             if (methodName == "preload")
                 if (isThereColon && (variableDeclarationType != null))
                     return IdentifierName(ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(variableDeclarationType.ToString()));
@@ -197,6 +168,8 @@ namespace GDShrapt.Converter.Tests
             {
                 if (isThereColon && (variableDeclarationType != null))
                     return IdentifierName(ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(variableDeclarationType.ToString()));
+                else if (isThereColon && methodNameIdentifier.TryExtractLocalScopeVisibleDeclarationFromParents(out gdIdent) && ((GDMethodDeclaration)gdIdent.Parent).ReturnType != null)
+                    return IdentifierName(ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(((GDMethodDeclaration)gdIdent.Parent).ReturnType.ToString()));
                 else if (kind != null)
                     return PredefinedType(Token(kind.Value));
                 else if (ValidateTypeAndNameHelper.IsItGodotType(methodName))
@@ -221,15 +194,25 @@ namespace GDShrapt.Converter.Tests
                 return TokenList(Token(accessModifier));
         }
 
-        public FieldDeclarationSyntax GetVariableDeclaration(string nameVariable, TypeSyntax typeVariable, SyntaxTokenList modifiers, ExpressionSyntax literalExpression = null)
+        VariableDeclarationSyntax GetVariableDeclaration(string nameVariable, TypeSyntax typeVariable, ExpressionSyntax literalExpression = null)
         {
             var nameDeclaration = VariableDeclarator(Identifier(nameVariable));
 
             if (literalExpression != null)
                 nameDeclaration = nameDeclaration.WithInitializer(EqualsValueClause(literalExpression));
 
-            return FieldDeclaration(VariableDeclaration(typeVariable).WithVariables(SingletonSeparatedList(nameDeclaration)))
+            return VariableDeclaration(typeVariable).WithVariables(SingletonSeparatedList(nameDeclaration));
+        }
+
+        public FieldDeclarationSyntax GetVariableFieldDeclaration(string nameVariable, TypeSyntax typeVariable, SyntaxTokenList modifiers, ExpressionSyntax literalExpression = null)
+        {
+            return FieldDeclaration(GetVariableDeclaration(nameVariable, typeVariable, literalExpression))
                                         .WithModifiers(modifiers);
+        }
+
+        LocalDeclarationStatementSyntax GetLocalDeclarationStatement(string nameVariable, TypeSyntax typeVariable, ExpressionSyntax literalExpression = null)
+        {
+            return LocalDeclarationStatement(GetVariableDeclaration(nameVariable, typeVariable, literalExpression));
         }
 
         ExpressionSyntax AddArgumentToExpressionSyntax2(ExpressionSyntax expressionSyntax, params ArgumentSyntax[] arguments)

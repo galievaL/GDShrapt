@@ -12,13 +12,20 @@ namespace GDShrapt.Converter.Tests
 {
     internal partial class CSharpGeneratingVisitor : INodeVisitor
     {
+        MethodDeclarationSyntax GetMethodDeclaration(string methodType, string methodName, SyntaxTokenList modifiers, params StatementSyntax[] statements)
+        {
+            return MethodDeclaration(IdentifierName(methodType), methodName)
+                        .WithModifiers(modifiers)
+                        .WithBody(Block(statements));
+        }
+
         FieldDeclarationSyntax CreateArrayField(GDArrayInitializerExpression expression, SyntaxKind kind, bool isConst = false, SyntaxKind accessModifier = SyntaxKind.PublicKeyword)
         {
             var allCollection = expression?.Values?.Nodes?.ToList();
             var parent = (GDVariableDeclaration)expression.Parent;
             var identifier = parent?.Identifier?.ToString();
 
-            var literalExpressions = allCollection.Select(value => (ExpressionSyntax)GetLiteralExpression(value).LiteralExpressionSyntax).ToList();
+            var literalExpressions = allCollection.Select(value => (ExpressionSyntax)GetLiteralExpression(value).ArgumentLiteralExpressionSyntax.Expression).ToList();
             var initializerExpression = InitializerExpression(SyntaxKind.ArrayInitializerExpression, SeparatedList(literalExpressions));
 
             var modifiers = GetModifier("", false);
@@ -30,47 +37,7 @@ namespace GDShrapt.Converter.Tests
             var arrayType = ArrayType(predefinedType)
                     .WithRankSpecifiers(SingletonList(ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression()))));
 
-            return GetVariableDeclaration(name, arrayType, modifiers, initializer);
-        }
-
-        ExpressionStatementSyntax GetObjectCreationExpressionStatement(string identifierType, TypeSyntax initializerType, params ArgumentSyntax[] argumentsOfInitializer)
-        {
-            //var callInvocation = InvocationExpression(IdentifierName("Call")).AddArgumentListArguments(Argument(GetLiteralExpression(methodNameText)));
-            //ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName("Name"), callInvocation))
-
-            //identifierType = "Name";
-            //initializerType = IdentifierName("Call");
-            //argumentsOfInitializer = Argument(GetLiteralExpression(methodNameText));
-
-            var objectCreationExpression = ObjectCreationExpression(initializerType).AddArgumentListArguments(argumentsOfInitializer);
-
-            return ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifierType), objectCreationExpression));
-        }
-
-        ExpressionStatementSyntax GetInvocationExpressionStatement(string identifierType, LiteralExpressionSyntax methodName, string initializerType = "Call", params ArgumentSyntax[] argumentsOfInitializer)
-        {
-            var objectCreationExpression = InvocationExpression(IdentifierName(initializerType))
-                        .AddArgumentListArguments(Argument(methodName))
-                        .AddArgumentListArguments(argumentsOfInitializer);
-
-            return ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifierType), objectCreationExpression));
-        }
-
-        InvocationExpressionSyntax CreateMethodInvocationExpressionSyntax(string methodName, string initializerType = "Call", params ArgumentSyntax[] argumentsOfInitializer)
-        {
-            //Call("MethodName", arguments)
-            var literalMethodName = GetLiteralExpression(methodName);
-
-            return InvocationExpression(IdentifierName(initializerType))
-                        .AddArgumentListArguments(Argument(literalMethodName))
-                        .AddArgumentListArguments(argumentsOfInitializer);
-        }
-
-        ExpressionStatementSyntax CreateMethodInvocationExpressionSyntax(string identifierType, params ArgumentSyntax[] argumentsOfInitializer)
-        {
-            var objectCreationExpression = CreateMethodInvocationExpressionSyntax("get_name", "Call", argumentsOfInitializer);
-
-            return ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifierType), objectCreationExpression));
+            return GetVariableFieldDeclaration(name, arrayType, modifiers, initializer);
         }
     }
 }

@@ -37,27 +37,27 @@ namespace GDShrapt.Converter.Tests
 
             if (initializer.TypeName == "GDCallExpression")
             {
-                var arguments = GetLiteralExpression(initializer).ArgumentLiteralExpressionSyntaxList;
+                var arguments = GetLiteralExpression(initializer).ArgumentLiteralExpressionSyntax;
 
                 var initializerNodes = initializer.Nodes.ToList();
                 var methodNameIdentifier = ((GDIdentifierExpression)initializerNodes.Where(x => x.TypeName == "GDIdentifierExpression").FirstOrDefault()).Identifier;
                 var methodNameText = methodNameIdentifier.ToString();
 
-                type = GetTypeVariable(methodNameText, isThereColon, d.Type, isConst);
+                type = GetTypeVariable(methodNameIdentifier, isThereColon, d.Type, isConst);
                 modifiers = GetModifier(methodNameText, isConst);
 
                 var containCallExpr = GetExpressionsList(initializer).Any(x => x.TypeName == "GDCallExpression");
 
                 if ((ValidateTypeAndNameHelper.IsItGodotType(methodNameText) || methodNameText == "preload") && !containCallExpr)
                 {
-                    rightPart = arguments.Last().Expression;
-                    member = GetVariableDeclaration(identifier, type, modifiers, rightPart);
+                    rightPart = arguments.Expression;
+                    member = GetVariableFieldDeclaration(identifier, type, modifiers, rightPart);
                 }
                 else
                 {
-                    member = GetVariableDeclaration(identifier, type, modifiers);
+                    member = GetVariableFieldDeclaration(identifier, type, modifiers);
 
-                    var expressionStatement = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), arguments.Last().Expression));
+                    var expressionStatement = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), arguments.Expression));
                     
                     AddToAllExistingConstructors(expressionStatement);
                     AddConstructor(new ParameterListTKey(), expressionStatement);
@@ -80,10 +80,10 @@ namespace GDShrapt.Converter.Tests
                         throw new NotImplementedException();
                         break;
                 }
-                rightPart = GetLiteralExpression(initializer).LiteralExpressionSyntax;
+                rightPart = GetLiteralExpression(initializer).ArgumentLiteralExpressionSyntax.Expression;
                 type = GetTypeVariable("", isThereColon, d.Type, isConst, kind);
                 modifiers = GetModifier("", isConst);
-                member = GetVariableDeclaration(identifier, type, modifiers, rightPart);
+                member = GetVariableFieldDeclaration(identifier, type, modifiers, rightPart);
             }
 
             if (member != null)
@@ -371,6 +371,55 @@ namespace GDShrapt.Converter.Tests
 
         public void Visit(GDMethodDeclaration d)
         {
+            var identifier = ValidateTypeAndNameHelper.GetValidateFieldName(d.Identifier.ToString());
+            var statementsList = d.Nodes.Where(x => x.TypeName == "GDStatementsList").FirstOrDefault().Nodes.ToList();
+            var type = d.ReturnType != null ? ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(d.ReturnType.ToString()) : "Variant";
+
+            var args = new List<StatementSyntax>();
+
+            foreach (var stat in statementsList)
+            {
+                if (stat.TypeName == "GDExpressionStatement")
+                {
+                    var tt = ((GDExpressionStatement)stat).Nodes.ToList();
+
+                    foreach (var expr in tt)
+                    {
+                        if (expr.TypeName == "GDReturnExpression")
+                        {
+                            var returnExpression = expr.Nodes.ToList();
+
+                            foreach (var ret in returnExpression)
+                            {
+                                args.Add(ReturnStatement(GetLiteralExpression(ret).ArgumentLiteralExpressionSyntax.Expression));
+                            }
+                        }
+                    }
+                }
+                else if (stat.TypeName == "GDVariableDeclarationStatement")
+                {
+                    var stat1 = ((GDVariableDeclarationStatement)stat);
+                    var statNodes = stat1.Nodes.ToList();
+                    var ident = ValidateTypeAndNameHelper.GetValidateFieldName(stat1.Identifier.ToString());
+                    var initializer = stat1.Initializer;
+
+                    foreach (var t in statNodes)
+                    {
+                        if (t.TypeName == "GDDualOperatorExpression")
+                        {
+                        }
+                        else if (t.TypeName == "GDStringExpression")
+                        {
+                            var literal = LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(initializer.ToString()));
+
+                            args.Add(GetLocalDeclarationStatement(ident.ToString(), IdentifierName("var"), literal));
+                        }
+                    }
+                }
+            }
+
+            var member = GetMethodDeclaration(type, identifier.ToString(), SyntaxTokenList.Create(Token(SyntaxKind.PublicKeyword)), args.ToArray());
+            _methodsPartsCode.Add(member);
         }
 
         public void Visit(GDExpressionStatement s)

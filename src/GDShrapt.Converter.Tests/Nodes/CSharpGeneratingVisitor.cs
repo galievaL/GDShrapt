@@ -15,6 +15,7 @@ namespace GDShrapt.Converter.Tests
 
         private ClassDeclarationSyntax _partsCode;
         private CompilationUnitSyntax _compilationUnit;
+        private List<MethodDeclarationSyntax> _methodsPartsCode = new List<MethodDeclarationSyntax>();
 
         private string _className;
 

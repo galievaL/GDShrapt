@@ -27,6 +27,9 @@ namespace GDShrapt.Converter.Tests
                     _partsCode = _partsCode.AddMembers(contr);
                 }
             }
+
+            if (_methodsPartsCode.Count > 0)
+                _partsCode = _partsCode.AddMembers(_methodsPartsCode.ToArray());
         }
 
         public void Left(GDWhileStatement s)
