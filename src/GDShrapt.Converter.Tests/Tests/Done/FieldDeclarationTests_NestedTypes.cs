@@ -3,7 +3,7 @@ using GDShrapt.Reader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests.Tests2
+namespace GDShrapt.Converter.Tests.Tests.Done
 {
     [TestClass]
     public class FieldDeclarationTests_NestedTypes : Test

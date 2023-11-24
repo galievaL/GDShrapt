@@ -10,48 +10,6 @@ namespace GDShrapt.Converter.Tests
 {
     public static class ValidateTypeAndNameHelper
     {
-        public static Dictionary<string, string> VariantTypesToLowerAndTheirEquivalentSharpTypes = new Dictionary<string, string>()
-        {
-            ["nil"] = "null",
-            ["bool"] = "bool",
-            ["int"] = "long",
-            ["float"] = "double",
-            ["string"] = "string",
-            ["vector2"] = "Vector2",
-            ["vector2i"] = "Vector2I",
-            ["rect2"] = "Rect2",
-            ["rect2i"] = "Rect2I",
-            ["vector3"] = "Vector3",
-            ["vector3i"] = "Vector3I",
-            ["transform2d"] = "Transform2D",
-            ["vector4"] = "Vector4",
-            ["vector4i"] = "Vector4I",
-            ["plane"] = "Plane",
-            ["quaternion"] = "Quaternion",
-            ["aabb"] = "Aabb",
-            ["basis"] = "Basis",
-            ["transform3d"] = "Transform3D",
-            ["projection"] = "Projection",
-            ["color"] = "Color",
-            ["stringname"] = "StringName",
-            ["nodepath"] = "NodePath",
-            ["rid"] = "Rid",
-            ["object"] = "GodotObject ",
-            ["callable"] = "Callable",
-            ["signal"] = "Signal",
-            ["dictionary"] = "Collections.Dictionary",
-            ["array"] = "Collections.Array",
-            ["packedbytearray"] = "byte[]",
-            ["packedint32array"] = "int[]",
-            ["packedint64array"] = "long[]",
-            ["packedfloat32array"] = "float[]",
-            ["packedfloat64array"] = "double[]",
-            ["packedstringarray"] = "string[]",
-            ["packedvector2array"] = "Vector2[]",
-            ["packedvector3array"] = "Vector3[]",
-            ["packedcolorarray"] = "Color[]"
-        };
-
         public static string GetValidateClassName(this string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -79,15 +37,43 @@ namespace GDShrapt.Converter.Tests
         public static string GetTypeAdaptationToStandartMethodsType(string typeName)
         {
             var type = typeName.ToLower();
-            if (VariantTypesToLowerAndTheirEquivalentSharpTypes.ContainsKey(type))
-                return VariantTypesToLowerAndTheirEquivalentSharpTypes[type];
+            if (GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower.ContainsKey(type))
+                return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower[type];
 
             return typeName;
         }
 
         public static bool IsItGodotType(string typeName)
         {
-            return VariantTypesToLowerAndTheirEquivalentSharpTypes.ContainsKey(typeName.ToLower());
+            var type = typeName.ToLower();
+            return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower.ContainsKey(type);
+        }
+
+        public static bool IsItGodotFunctions(ref string functionsName, out string type)
+        {
+            type = null;
+            functionsName = functionsName.ToLower();
+
+            var b1 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptConstantsToLower_TheirEquivalentAndReturnTypes.ContainsKey(functionsName);
+            var b2 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_TheirEquivalentAndReturnTypes.ContainsKey(functionsName);
+            var b3 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_TheirEquivalentAndReturnTypes_NAequivalent.ContainsKey(functionsName);
+            var b4 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_TheirEquivalentAndReturnTypes.ContainsKey(functionsName);
+            var b5 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_TheirEquivalentAndReturnTypes_NAequivalen.ContainsKey(functionsName);
+
+            if (!(b1 || b2 || b3 || b4 || b5))
+                return false;
+
+            var group = b1 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptConstantsToLower_TheirEquivalentAndReturnTypes[functionsName] :
+                            b2 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_TheirEquivalentAndReturnTypes[functionsName] :
+                            b3 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_TheirEquivalentAndReturnTypes_NAequivalent[functionsName] :
+                            b4 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_TheirEquivalentAndReturnTypes[functionsName] :
+                            b5 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_TheirEquivalentAndReturnTypes_NAequivalen[functionsName] :
+                            throw new NotImplementedException();
+
+            type = group.type;
+            functionsName = group.csharpFunction;
+
+            return true;
         }
 
         static string ValidateFirstLetter(string name)

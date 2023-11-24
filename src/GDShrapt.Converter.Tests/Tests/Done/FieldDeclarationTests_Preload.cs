@@ -28,7 +28,7 @@ namespace Generated
     [Tool]
     public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public static readonly Resource HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
+        public static readonly Resource HTerrainData = GD.Load(""./ hterrain_data.gd"");
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -56,7 +56,7 @@ namespace Generated
     [Tool]
     public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public Resource HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
+        public Resource HTerrainData = GD.Load(""./ hterrain_data.gd"");
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -84,7 +84,7 @@ namespace Generated
     [Tool]
     public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public Resource HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
+        public Resource HTerrainData = GD.Load(""./ hterrain_data.gd"");
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -112,7 +112,7 @@ namespace Generated
     [Tool]
     public class HTerrainDataSaver : ResourceFormatSaver
     {
-        public MyType HTerrainData = ResourceLoader.Load(""./ hterrain_data.gd"");
+        public MyType HTerrainData = GD.Load(""./ hterrain_data.gd"");
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
