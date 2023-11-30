@@ -37,8 +37,6 @@ namespace Generated
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
 
-            CompareCodeStrings(csharpCodeExpectedResult, csharpCode);
-
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
 

@@ -34,47 +34,101 @@ namespace GDShrapt.Converter.Tests
             return name;
         }
 
+        //public static bool GetTypeAdaptationToStandartMethodsType(ref string typeName)
+        //{
+        //    if (IsStandartGodotType(typeName))
+        //        typeName = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower[typeName.ToLower()];
+
+        //    return IsStandartGodotType(typeName);
+        //}
+
+        //public static string GetTypeAdaptationToStandartMethodsType(string typeName)
+        //{
+        //    if (IsStandartGodotType(typeName))
+        //        return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower[typeName.ToLower()];
+
+        //    return typeName;
+        //}
+
         public static string GetTypeAdaptationToStandartMethodsType(string typeName)
         {
-            var type = typeName.ToLower();
-            if (GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower.ContainsKey(type))
-                return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower[type];
+            if (!IsStandartGodotType(typeName))
+                return typeName;
 
-            return typeName;
+            return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower2[typeName.ToLower()].csharpEquivalent;
         }
 
-        public static bool IsItGodotType(string typeName)
+        public static bool GetTypeAdaptationToStandartMethodsType(ref string typeName)
         {
-            var type = typeName.ToLower();
-            return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower.ContainsKey(type);
+            var isStandartGodotType = IsStandartGodotType(typeName);
+
+            if (isStandartGodotType)
+                typeName = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower2[typeName.ToLower()].csharpEquivalent;
+
+            return isStandartGodotType;
         }
 
-        public static bool IsItGodotFunctions(ref string functionsName, out string type)
+        public static bool IsStandartGodotType(string typeName)
+        {
+            return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower2.ContainsKey(typeName.ToLower());
+        }
+
+        public static bool IsGodotFunctions(ref string functionsName, out MyType type)
         {
             type = null;
-            functionsName = functionsName.ToLower();
+            var functionsNameLower = functionsName.ToLower();
 
-            var b1 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptConstantsToLower_TheirEquivalentAndReturnTypes.ContainsKey(functionsName);
-            var b2 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_TheirEquivalentAndReturnTypes.ContainsKey(functionsName);
-            var b3 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_TheirEquivalentAndReturnTypes_NAequivalent.ContainsKey(functionsName);
-            var b4 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_TheirEquivalentAndReturnTypes.ContainsKey(functionsName);
-            var b5 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_TheirEquivalentAndReturnTypes_NAequivalen.ContainsKey(functionsName);
+            var b1 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptConstsToLower_TheirEquivalentAndReturnTypes.ContainsKey(functionsNameLower);
+            var b2 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions.ContainsKey(functionsNameLower);
+            var b3 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_NAequivalent.ContainsKey(functionsNameLower);
+            var b4 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions.ContainsKey(functionsNameLower);
+            var b5 = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_NAequivalen.ContainsKey(functionsNameLower);
 
             if (!(b1 || b2 || b3 || b4 || b5))
                 return false;
 
-            var group = b1 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptConstantsToLower_TheirEquivalentAndReturnTypes[functionsName] :
-                            b2 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_TheirEquivalentAndReturnTypes[functionsName] :
-                            b3 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_TheirEquivalentAndReturnTypes_NAequivalent[functionsName] :
-                            b4 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_TheirEquivalentAndReturnTypes[functionsName] :
-                            b5 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_TheirEquivalentAndReturnTypes_NAequivalen[functionsName] :
+            var tuple = b1 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptConstsToLower_TheirEquivalentAndReturnTypes[functionsNameLower] :
+                            b2 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions[functionsNameLower] :
+                            b3 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions_NAequivalent[functionsNameLower] :
+                            b4 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions[functionsNameLower] :
+                            b5 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_NAequivalen[functionsNameLower] :
                             throw new NotImplementedException();
 
-            type = group.type;
-            functionsName = group.csharpFunction;
+            type = tuple.returnTypes;
+            functionsName = tuple.csharpEquivalent;
 
             return true;
         }
+
+        public static bool IsGDScriptConsts(ref string functionsName, out SyntaxKind? type)
+        {
+            type = null;
+            var functionsNameLower = functionsName.ToLower();
+
+            if (GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptConstsToLower_TheirEquivalentAndReturnTypes.ContainsKey(functionsNameLower))
+            {
+                var group = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptConstsToLower_TheirEquivalentAndReturnTypes[functionsNameLower];
+
+                functionsName = group.csharpEquivalent;
+                type = group.returnTypes;
+
+                return true;
+            }
+
+            return false;
+        }
+        /*
+        static void Nn()
+        {
+            var types = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptGlobalScopeFunctions2;
+
+            var type = types["abs"].returnTypes;
+
+            var number = type.Match(
+                godot => 1,
+                gdShrapt => 2);
+
+        }*/
 
         static string ValidateFirstLetter(string name)
         {

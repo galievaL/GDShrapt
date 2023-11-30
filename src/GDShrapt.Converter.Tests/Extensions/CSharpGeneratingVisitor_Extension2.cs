@@ -25,7 +25,7 @@ namespace GDShrapt.Converter.Tests
             var parent = (GDVariableDeclaration)expression.Parent;
             var identifier = parent?.Identifier?.ToString();
 
-            var literalExpressions = allCollection.Select(value => (ExpressionSyntax)GetArgumentSyntaxExpression(value).Expression).ToList();
+            var literalExpressions = allCollection.Select(value => GetLiteralExpression(value, isConst)).ToList();
             var initializerExpression = InitializerExpression(SyntaxKind.ArrayInitializerExpression, SeparatedList(literalExpressions));
 
             var modifiers = GetModifier();

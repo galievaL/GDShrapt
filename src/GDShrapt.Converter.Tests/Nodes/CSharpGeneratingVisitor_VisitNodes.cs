@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using GDShrapt.Reader;
 using Microsoft.CodeAnalysis;
@@ -26,149 +27,47 @@ namespace GDShrapt.Converter.Tests
             var isConst = d.ConstKeyword != null;
             var isThereColon = d.Colon != null;
 
-            MemberDeclarationSyntax member = default;
-            ExpressionSyntax rightPart = default;
+            var member = default(MemberDeclarationSyntax);
 
-            SyntaxTokenList modifiers = new SyntaxTokenList();
-            SyntaxKind kind = default;
-            TypeSyntax leftPartType = default;
+            var leftPartType = default(TypeSyntax);
+            var modifiers = new SyntaxTokenList();
+
+            var rightPart = GetLiteralExpression(initializer, isConst);
+            var kind = GetAverageType(d.AllNodes.ToList());
 
             if (initializer.TypeName == "GDCallExpression")
             {
-                var arguments = GetArgumentSyntaxExpression(initializer);
-
-                var initializerNodes = initializer.Nodes.ToList();
-                var methodNameIdentifier = ((GDIdentifierExpression)initializerNodes.Where(x => x.TypeName == "GDIdentifierExpression").FirstOrDefault()).Identifier;
+                var methodNameIdentifier = GetIdentifierExpression(initializer);
                 var methodNameText = methodNameIdentifier.ToString();
 
-                leftPartType = GetTypeVariable(methodNameIdentifier, isThereColon, d.Type, isConst);
-                modifiers = GetModifier(methodNameText, isConst);
+                leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, methodNameIdentifier);
+                modifiers = GetModifier(methodNameText, isConst, kind);
 
                 var containCallExpr = GetExpressionsList(initializer).Any(x => x.TypeName == "GDCallExpression");
+                var isItStandartGodotType = ValidateTypeAndNameHelper.IsStandartGodotType(methodNameText);
+                var isGodotFunctions = ValidateTypeAndNameHelper.IsGodotFunctions(ref methodNameText, out MyType type);
 
-                if ((ValidateTypeAndNameHelper.IsItGodotType(methodNameText) || ValidateTypeAndNameHelper.IsItGodotFunctions(ref methodNameText, out string type)) && !containCallExpr)
-                {
-                    rightPart = arguments.Expression;
+                if (isConst || !containCallExpr && (isItStandartGodotType || isGodotFunctions))
                     member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
-                }
                 else
                 {
                     member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers);
 
-                    var expressionStatement = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), arguments.Expression));
-                    
-                    AddToAllExistingConstructors(expressionStatement);
-                    AddConstructor(new ParameterListTKey(), expressionStatement);
+                    var expr = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), rightPart));
+                    AddToAllExistingConstructors(expr);
+                    AddConstructor(new ParameterListTKey(), expr);
                 }
-            }
-            else if (initializer.TypeName == "GDDualOperatorExpression")
-            {
-                leftPartType = GetTypeVariable("", isThereColon, d.Type, isConst, kind);
-                modifiers = GetModifier(isConst: isConst);
-
-                rightPart = GetLiteralExpression(initializer);
-
-                member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
             }
             else
             {
-                switch (initializer.TypeName)
-                {
-                    case "GDStringExpression":
-                        kind = SyntaxKind.StringKeyword;
-                        break;
-                    case "GDNumberExpression":
-                        kind = GetSyntaxKind((GDNumberExpression)initializer);
-                        break;
-                    case "GDBoolExpression":
-                        kind = SyntaxKind.BoolKeyword;
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                        break;
-                }
-                leftPartType = GetTypeVariable("", isThereColon, d.Type, isConst, kind);
-                rightPart = GetArgumentSyntaxExpression(initializer).Expression;
-                modifiers = GetModifier(isConst: isConst);
+                leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, averageType: kind);
+                modifiers = GetModifier(isConst: isConst, averageType: kind);
 
                 member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
             }
 
             if (member != null)
                 _partsCode = _partsCode.AddMembers(member);
-        }
-
-        SyntaxKind GetCSharpDualOperatorType(GDDualOperatorType gdType)
-        {
-            switch (gdType)
-            {
-                case GDDualOperatorType.Null:
-                    throw new NotImplementedException();
-                case GDDualOperatorType.MoreThan:
-                    return SyntaxKind.GreaterThanExpression;
-                case GDDualOperatorType.LessThan:
-                    return SyntaxKind.LessThanExpression;
-                case GDDualOperatorType.Assignment:
-                    return SyntaxKind.EqualsValueClause;
-                case GDDualOperatorType.Subtraction:
-                    return SyntaxKind.SubtractExpression;
-                case GDDualOperatorType.Division:
-                    return SyntaxKind.DivideExpression;
-                case GDDualOperatorType.Multiply:
-                    return SyntaxKind.MultiplyExpression;
-                case GDDualOperatorType.Addition:
-                    return SyntaxKind.AddExpression;
-                case GDDualOperatorType.AddAndAssign:
-                    return SyntaxKind.AddAssignmentExpression;
-                case GDDualOperatorType.NotEqual:
-                    return SyntaxKind.NotEqualsExpression;
-                case GDDualOperatorType.MultiplyAndAssign:
-                    return SyntaxKind.MultiplyExpression;
-                case GDDualOperatorType.SubtractAndAssign:
-                    return SyntaxKind.SubtractAssignmentExpression;
-                case GDDualOperatorType.LessThanOrEqual:
-                    return SyntaxKind.LessThanOrEqualExpression;
-                case GDDualOperatorType.MoreThanOrEqual:
-                    return SyntaxKind.GreaterThanOrEqualExpression;
-                case GDDualOperatorType.Equal:
-                    return SyntaxKind.EqualsExpression;
-                case GDDualOperatorType.DivideAndAssign:
-                    return SyntaxKind.DivideAssignmentExpression;
-                case GDDualOperatorType.Or:
-                    return SyntaxKind.LogicalOrExpression;
-                case GDDualOperatorType.Or2:
-                    return SyntaxKind.LogicalOrExpression;
-                case GDDualOperatorType.And:
-                    return SyntaxKind.LogicalAndExpression;
-                case GDDualOperatorType.And2:
-                    return SyntaxKind.LogicalAndExpression;
-                case GDDualOperatorType.Is:
-                    return SyntaxKind.IsExpression;
-                case GDDualOperatorType.As:
-                    return SyntaxKind.AsExpression;
-                case GDDualOperatorType.ModAndAssign:
-                    return SyntaxKind.ModuloAssignmentExpression;
-                case GDDualOperatorType.BitShiftLeft:
-                    return SyntaxKind.LeftShiftExpression;
-                case GDDualOperatorType.BitShiftRight:
-                    return SyntaxKind.RightShiftExpression;
-                case GDDualOperatorType.Mod:
-                    return SyntaxKind.ModuloExpression;
-                case GDDualOperatorType.Xor:
-                    return SyntaxKind.ExclusiveOrExpression;
-                case GDDualOperatorType.BitwiseOr:
-                    return SyntaxKind.BitwiseOrExpression;
-                case GDDualOperatorType.BitwiseAnd:
-                    return SyntaxKind.BitwiseAndExpression;
-                case GDDualOperatorType.In:
-                    throw new NotImplementedException(); //ToDo: написать конкретику
-                case GDDualOperatorType.BitwiseAndAndAssign:
-                    throw new NotImplementedException(); //ToDo: написать конкретику
-                case GDDualOperatorType.BitwiseOrAndAssign:
-                    throw new NotImplementedException(); //ToDo: написать конкретику
-                default:
-                    throw new NotImplementedException();
-            }
         }
 
         public void Visit(GDArrayInitializerExpression e)
@@ -459,7 +358,7 @@ namespace GDShrapt.Converter.Tests
 
                             foreach (var ret in returnExpression)
                             {
-                                args.Add(ReturnStatement(GetArgumentSyntaxExpression(ret).Expression));
+                                args.Add(ReturnStatement(GetLiteralExpression(ret)));
                             }
                         }
                     }

@@ -48,7 +48,7 @@ namespace Generated
 {
     public class Builder
     {
-        public const double DOUBLE_TAU = Mathf.Tau * 2.0;
+        public const double DOUBLE_TAU = Mathf.Tau * 2;
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -72,7 +72,7 @@ namespace Generated
 {
     public class Builder
     {
-        public const double DOUBLE_INF = Mathf.Inf * 2.0;
+        public const double DOUBLE_INF = Mathf.Inf * 2;
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -85,7 +85,7 @@ namespace Generated
         {
             var code = @"
 class_name Builder
-const DOUBLE_NAN = NAN
+const DOUBLE_NAN = NAN * 2.0
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
@@ -96,7 +96,7 @@ namespace Generated
 {
     public class Builder
     {
-        public const double DOUBLE_NAN = Mathf.NaN * 2.0;
+        public const double DOUBLE_NAN = Mathf.NaN * 2;
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -144,7 +144,7 @@ namespace Generated
 {
     public class Builder
     {
-        public const double NUMBER = Mathf.Sin(20);
+        public const double NUMBER = Mathf.Sin(20L);
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -192,7 +192,7 @@ namespace Generated
 {
     public class Builder
     {
-        public static readonly double NUMBER = 1.234 + Some_f();
+        public static readonly Variant NUMBER = 1.234 + Some_f();
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -217,6 +217,30 @@ namespace Generated
     public class Builder
     {
         public static readonly Variant Name = Get_name();
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTests_Const_Test7()
+        {
+            var code = @"
+class_name Builder
+const Name = 1.234 + get_name() + 5.88
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public static readonly Variant Name = 1.234 + Get_name() + 5.88;
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
