@@ -162,17 +162,17 @@ namespace GDShrapt.Converter.Tests
             ["wrap"] = ("Mathf.Wrap", SyntaxKind.DoubleKeyword),
             ["wrapf"] = ("Mathf.Wrap", SyntaxKind.DoubleKeyword),
             ["wrapi"] = ("Mathf.Wrap", SyntaxKind.LongKeyword),
-            ["var_to_bytes"] = ("GD.VarToBytes", ArrayTypes.ByteArray), //ToDo "byte[]"),
-            ["var_to_bytes_with_objects"] = ("GD.VarToBytesWithObjects", ArrayTypes.ByteArray), //ToDo "byte[]"),
+            ["var_to_bytes"] = ("GD.VarToBytes", ArrayTypes.ByteArray),
+            ["var_to_bytes_with_objects"] = ("GD.VarToBytesWithObjects", ArrayTypes.ByteArray),
             ["weakref"] = ("GodotObject.WeakRef", AnotherType.WeakRef),
         };
 
         public static Dictionary<string, (string csharpEquivalent, MyType returnTypes)> GDScriptGlobalScopeFunctions_NAequivalent = new Dictionary<string, (string, MyType)>
         {
             ["rid_allocate_id"] = ("rid_allocate_id", AnotherType.Rid),
-            ["rid_from_int64"] = ("rid_from_int64", AnotherType.Rid)
-            //ToDo ["fmod"] = "operator %"
-            //ToDo ["str"] = (то, что в скобках).ToString()
+            ["rid_from_int64"] = ("rid_from_int64", AnotherType.Rid),
+            ["fmod"] = ("fmod", SyntaxKind.DoubleKeyword),
+            ["str"] = ("str", SyntaxKind.StringKeyword)
         };
 
         public static Dictionary<string, (string csharpEquivalent, MyType returnTypes)> GDScriptUtilityFunctions = new Dictionary<string, (string, MyType)>
@@ -192,8 +192,9 @@ namespace GDShrapt.Converter.Tests
             ["dict_to_inst"] = ("dict_to_inst", SyntaxKind.ObjectKeyword),
             ["print_debug"] = ("print_debug", SyntaxKind.VoidKeyword),
             ["len"] = ("len", SyntaxKind.LongKeyword),
-            ["inst_to_dict"] = ("inst_to_dict", AnotherType.Dictionary)
-            //ToDo ["char"] = "Используйте явное преобразование: (char)65",
+            ["inst_to_dict"] = ("inst_to_dict", AnotherType.Dictionary),
+            ["char"] = ("char", SyntaxKind.CharKeyword),
+            ["float"] = ("float", SyntaxKind.DoubleKeyword)
         };
     }
 }

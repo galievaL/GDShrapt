@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using GDShrapt.Reader;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -36,7 +37,7 @@ namespace GDShrapt.Converter.Tests
                     foreach (var p in parameters)
                         args.Add(GetLiteralExpression(p, isConst, argumentsFactory));
 
-                    return GetArgumentToMethodExpressionSyntax(ident, isConst, args.Select(x => Argument(x)).ToList());
+                    return GetArgumentToMethodExpressionSyntax(ident, isConst, args);
                 case "GDDualOperatorExpression":
                     var operatorType = GetCSharpDualOperatorType(((GDDualOperatorExpression)node).OperatorType);
                     var nodes = node.Nodes.ToList();
@@ -57,75 +58,42 @@ namespace GDShrapt.Converter.Tests
             }
         }
          
-        //ArgumentSyntax GetArgumentSyntaxExpression(GDNode node, ArgumentSyntax argumentsFactory = null)
-        //{
-        //    if (node.TypeName == "")
-        //        throw new NotImplementedException();
-
-        //    switch (node.TypeName)
-        //    {
-        //        case "GDCallExpression":
-        //            var ident = GetIdentifierExpression(node);
-        //            var parameters = GetExpressionsList(node);
-        //            var args = new List<ArgumentSyntax>();
-
-        //            foreach (var p in parameters)
-        //                args.Add(GetArgumentSyntaxExpression(p, argumentsFactory));
-
-        //            return Argument(GetArgumentToMethodExpressionSyntax(ident, args));
-        //        case "GDStringExpression":
-        //            return Argument(GetLiteralExpression((GDStringExpression)node));
-        //        case "GDNumberExpression":
-        //            return Argument(GetLiteralExpression((GDNumberExpression)node));
-        //        case "GDBoolExpression":
-        //            return Argument(GetLiteralExpression(bool.Parse(node.ToString())));
-        //        case "GDIdentifierExpression":
-        //            var identif = ((GDIdentifierExpression)node).Identifier.ToString();
-        //            ValidateTypeAndNameHelper.IsItGodotFunctions(ref identif, out MyType type);
-        //            return Argument(IdentifierName(identif));
-        //        default:
-        //            throw new NotImplementedException();
-        //    }
-        //}
-
-        //ExpressionSyntax GetBinaryExpression(GDNode node, ArgumentSyntax argumentsFactory = null)
-        //{
-        //    if (node.TypeName == "")
-        //        throw new NotImplementedException();
-
-        //    switch (node.TypeName)
-        //    {
-        //        case "GDDualOperatorExpression":
-        //            var operatorType = GetCSharpDualOperatorType(((GDDualOperatorExpression)node).OperatorType);
-        //            var nodes = node.Nodes.ToList();
-
-        //            return BinaryExpression(operatorType, GetBinaryExpression(nodes[0]), GetBinaryExpression(nodes[1]));
-        //        case "GDCallExpression":
-        //        case "GDStringExpression":
-        //        case "GDNumberExpression":
-        //        case "GDBoolExpression":
-        //        case "GDIdentifierExpression":
-        //            return GetLiteralExpression(node);
-        //        default:
-        //            throw new NotImplementedException();
-        //    }
-        //}
-
-        //ExpressionSyntax GetArgumentToMethodExpressionSyntax(GDIdentifier methodNameIdentifier, List<ExpressionSyntax> arguments)
-        //{
-        //    var args = arguments.Select(x => Argument(x)).ToList();
-
-        //    return GetArgumentToMethodExpressionSyntax(methodNameIdentifier, args);
-        //}
-
-        ExpressionSyntax GetArgumentToMethodExpressionSyntax(GDIdentifier methodNameIdentifier, bool isConst, List<ArgumentSyntax> arguments)
+        ExpressionSyntax GetArgumentToMethodExpressionSyntax(GDIdentifier methodNameIdentifier, bool isConst, List<ExpressionSyntax> expressions)
         {
             var methodName = methodNameIdentifier.ToString();
             var validMethodName = ValidateTypeAndNameHelper.GetValidateFieldName(methodName);
+            var arguments = expressions.Select(x => Argument(x)).ToList();
 
-            if (ValidateTypeAndNameHelper.IsGodotFunctions(ref methodName, out MyType type))
+            if (methodName == "fmod")
             {
-                return InvocationExpression(IdentifierName(methodName))
+                return BinaryExpression(SyntaxKind.ModuloExpression, expressions[0], expressions[1]);
+            }
+            else if (methodName == "str")
+            {
+                return InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, expressions[0], IdentifierName("ToString")));
+            }
+            else if (methodName == "char")
+            {
+                return ParenthesizedExpression(CastExpression(PredefinedType(Token(SyntaxKind.CharKeyword)), expressions[0]));
+            }
+            else if (methodName == "float")
+            {
+                return ParenthesizedExpression(CastExpression(PredefinedType(Token(SyntaxKind.DoubleKeyword)), expressions[0]));
+            }
+            else if (ValidateTypeAndNameHelper.IsGodotFunctions(ref methodName, out MyType type))
+            {
+                if (methodName == "char" || methodName == "float")
+                {
+                    var tuple = ConvertMyTypeToTuple(type); //написать этот метод для всех мест
+                    TypeSyntax t1 = tuple.kind != null ? PredefinedType(Token(tuple.kind.Value)) : 
+                                        tuple.anotherType != null ? IdentifierName(tuple.anotherType.ToString()) : 
+                                        tuple.arrayTypes != null ? IdentifierName(tuple.arrayTypes.ToString()) : null;
+
+
+                    return ParenthesizedExpression(CastExpression(GetTypeSyntax(type), expressions[0]));
+                }
+                else 
+                    return InvocationExpression(IdentifierName(methodName))
                                     .WithArgumentList(ArgumentList(SeparatedList(arguments)));
             }
             else if (ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(ref methodName))
@@ -200,6 +168,28 @@ namespace GDShrapt.Converter.Tests
             return SyntaxKind.None;
         }
 
+        (SyntaxKind? kind, AnotherType? anotherType, ArrayTypes? arrayTypes) ConvertMyTypeToTuple(MyType type)
+        {
+            SyntaxKind? kind = null;
+            AnotherType? anotherType = null;
+            ArrayTypes? arrayType = null;
+
+            type?.Match<MyType>(
+                        syntaxKind => kind = syntaxKind.Kind,
+                        another => anotherType = another.Type,
+                        arrays => arrayType = arrays.Array);
+
+            return (kind, anotherType, arrayType);
+        }
+
+        TypeSyntax GetTypeSyntax(MyType type)
+        {
+            return type.Match<TypeSyntax>(
+                        syntaxKind => PredefinedType(Token(syntaxKind.Kind)),
+                        another => IdentifierName(another.Type.ToString()),
+                        arrays => IdentifierName(arrays.Array.ToString()));
+        }
+
         MyType GetAverageType(List<GDNode> allNodes)
         {
             int stringExpr = 0, longExpr = 0, doubleExpr = 0, boolExpr = 0, identExpr = 0;
@@ -217,14 +207,7 @@ namespace GDShrapt.Converter.Tests
                     }
                     else if (ValidateTypeAndNameHelper.IsGodotFunctions(ref name, out MyType type))
                     {
-                        SyntaxKind? kind = null;
-                        AnotherType? anotherType = null;
-                        ArrayTypes? arrayTypes = null;
-
-                        type?.Match<MyType>(
-                                    syntaxKind => kind = syntaxKind.Kind,
-                                    another => anotherType = another.Type,
-                                    arrays => arrayTypes = arrays.Array);
+                        (SyntaxKind ? kind, AnotherType? anotherType, ArrayTypes? arrayTypes) = ConvertMyTypeToTuple(type);
 
                         if (anotherType != null)
                             return anotherType;
@@ -296,26 +279,14 @@ namespace GDShrapt.Converter.Tests
             var methodName = methodNameIdentifier?.ToString() ?? "";
             var gdIdent = new GDIdentifier();
 
-            SyntaxKind? kind = null;
-            AnotherType? anotherType = null;
-            ArrayTypes? arrayType = null;
-
-            averageType?.Match<MyType>(
-                            syntaxKind => kind = syntaxKind.Kind,
-                            another => anotherType = another.Type,
-                            arrays => arrayType = arrays.Array);
+            (SyntaxKind? kind, AnotherType? anotherType, ArrayTypes? arrayTypes) = ConvertMyTypeToTuple(averageType);
 
             if (ValidateTypeAndNameHelper.IsGodotFunctions(ref methodName, out MyType returnType))
             {
                 if (isThereColon && (variableDeclarationType != null))
                     return IdentifierName(ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(variableDeclarationType.ToString()));
                 else
-                {
-                    return returnType.Match<TypeSyntax>(
-                                syntaxKind => PredefinedType(Token(syntaxKind.Kind)),
-                                another => IdentifierName(another.Type.ToString()),
-                                arrays => IdentifierName(arrays.Array.ToString()));
-                }
+                    return GetTypeSyntax(returnType);
             }
             else if (isThereConst || isThereColon)
             {
@@ -329,15 +300,16 @@ namespace GDShrapt.Converter.Tests
                 }
                 else if (kind != null && kind != SyntaxKind.None)
                 {
+                    //return GetTypeSyntax()
                     return PredefinedType(Token(kind.Value));
                 }
                 else if (anotherType != null)
                 {
                     return IdentifierName(anotherType.Value.ToString());
                 }
-                else if (arrayType != null)
+                else if (arrayTypes != null)
                 {
-                    return IdentifierName(arrayType.Value.ToString());
+                    return IdentifierName(arrayTypes.Value.ToString());
                 }
                 else if (ValidateTypeAndNameHelper.IsStandartGodotType(methodName))
                 {
@@ -352,14 +324,7 @@ namespace GDShrapt.Converter.Tests
 
         SyntaxTokenList GetModifier(string methodName = "", bool isConst = false, MyType? averageType = null, SyntaxKind accessModifier = SyntaxKind.PublicKeyword)
         {
-            SyntaxKind? kind = null;
-            AnotherType? anotherType = null;
-            ArrayTypes? arrayType = null;
-
-            averageType?.Match<MyType>(
-                            syntaxKind => kind = syntaxKind.Kind,
-                            another => anotherType = another.Type,
-                            array => arrayType = array.Array);
+            (SyntaxKind? kind, AnotherType? anotherType, ArrayTypes? arrayTypes) = ConvertMyTypeToTuple(averageType);
 
             if (isConst)
             {

@@ -59,6 +59,7 @@ namespace GDShrapt.Converter.Tests
         Callable,
         Signal,
         CollectionsDictionary,
-        CollectionsArray
+        CollectionsArray,
+        SpecialType
     }
 }

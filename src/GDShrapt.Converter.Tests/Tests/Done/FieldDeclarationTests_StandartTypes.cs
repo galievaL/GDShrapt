@@ -108,5 +108,80 @@ namespace Generated
 
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
+
+        [TestMethod]
+        public void FieldDeclarationTests_StandartTypes_Test5()
+        {
+            var code = @"
+class_name Builder
+
+var health = fmod(f, 0.1)
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public double Health = f % 0.1;
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTests_StandartTypes_Test6()
+        {
+            var code = @"
+class_name Builder
+
+var fff : float = float(i) / 100.0
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public double Fff = ((double)i) / 100;
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void FieldDeclarationTests_StandartTypes_Test7()
+        {
+            var code = @"
+class_name Builder
+
+var bbb = str(a)
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public string Bbb = a.ToString();
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
     }
 }

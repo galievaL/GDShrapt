@@ -282,6 +282,42 @@ namespace Generated
 
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
+
+        [TestMethod]
+        public void ConversionTest10()
+        {
+            var code = @"
+class_name Builder
+
+func _process2(_delta):
+  for i in range(-20, 20, 1):
+    var f : float = float(i) / 100.0
+    print([f, fmod(f, 0.1), fposmod(f, 0.1), f - 0.1 * floor(f / 0.1)])
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public void _provess2(Variant delta)
+        {
+            foreach(var i in Enumerable.Range(-20L, 20L, 1L))
+            {
+                double f = ((double)i) / 100.0;
+
+                GD.Print(new Array() { f, f % 0.1, Mathf.PosMod(f, 0.1), f - 0.1 * Mathf.Floor(f / 0.1) });
+            }
+        }
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
     }
 }
 

@@ -34,22 +34,6 @@ namespace GDShrapt.Converter.Tests
             return name;
         }
 
-        //public static bool GetTypeAdaptationToStandartMethodsType(ref string typeName)
-        //{
-        //    if (IsStandartGodotType(typeName))
-        //        typeName = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower[typeName.ToLower()];
-
-        //    return IsStandartGodotType(typeName);
-        //}
-
-        //public static string GetTypeAdaptationToStandartMethodsType(string typeName)
-        //{
-        //    if (IsStandartGodotType(typeName))
-        //        return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower[typeName.ToLower()];
-
-        //    return typeName;
-        //}
-
         public static string GetTypeAdaptationToStandartMethodsType(string typeName)
         {
             if (!IsStandartGodotType(typeName))

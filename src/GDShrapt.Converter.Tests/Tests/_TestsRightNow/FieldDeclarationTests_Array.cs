@@ -58,5 +58,33 @@ namespace Generated
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
 
+        [TestMethod]
+        public void FieldDeclarationTests_Array_Test3()
+        {
+            var code = @"
+class_name Builder
+
+var a = [10, 20, 30]
+var b = str(a)
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+using Array = Godot.Collections.Array;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public double a = new Array[10, 20, 30];
+        public string b = a.ToString();
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
     }
 }

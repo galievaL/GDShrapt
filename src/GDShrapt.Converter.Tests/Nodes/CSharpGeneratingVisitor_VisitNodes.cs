@@ -72,6 +72,9 @@ namespace GDShrapt.Converter.Tests
 
         public void Visit(GDArrayInitializerExpression e)
         {
+            var @using = UsingDirective(AliasQualifiedName(IdentifierName("Array"), IdentifierName("Godot.Collections.Array")));
+            _compilationUnit = _compilationUnit.WithUsings(new SyntaxList<UsingDirectiveSyntax>() { @using });
+
             var allCollection = e.Values.Nodes.ToList();
             var p = (GDVariableDeclaration)e.Parent;
             var identifier = p.Identifier.ToString();
