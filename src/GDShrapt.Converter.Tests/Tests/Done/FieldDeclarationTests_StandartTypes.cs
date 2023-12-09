@@ -126,7 +126,7 @@ namespace Generated
 {
     public class Builder
     {
-        public double Health = f % 0.1;
+        public double Health = F % 0.1;
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -151,7 +151,7 @@ namespace Generated
 {
     public class Builder
     {
-        public double Fff = ((double)i) / 100;
+        public double Fff = ((double)I) / 100;
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -176,7 +176,7 @@ namespace Generated
 {
     public class Builder
     {
-        public string Bbb = a.ToString();
+        public string Bbb = A.ToString();
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);

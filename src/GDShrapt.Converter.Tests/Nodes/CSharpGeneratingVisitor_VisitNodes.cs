@@ -27,21 +27,27 @@ namespace GDShrapt.Converter.Tests
             var isConst = d.ConstKeyword != null;
             var isThereColon = d.Colon != null;
 
+            if (initializer.TypeName == "GDArrayInitializerExpression")
+                return;
+
             var member = default(MemberDeclarationSyntax);
-
             var leftPartType = default(TypeSyntax);
+            var kind = default(MyType);
+            var rightPart = default(ExpressionSyntax);
             var modifiers = new SyntaxTokenList();
-
-            var rightPart = GetLiteralExpression(initializer, isConst);
-            var kind = GetAverageType(d.AllNodes.ToList());
 
             if (initializer.TypeName == "GDCallExpression")
             {
-                var methodNameIdentifier = GetIdentifierExpression(initializer);
+                var methodNameIdentifier = GetIdentifier((GDCallExpression)initializer);
                 var methodNameText = methodNameIdentifier.ToString();
 
                 leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, methodNameIdentifier);
-                modifiers = GetModifier(methodNameText, isConst, kind);
+
+                modifiers = GetModifier(methodNameText, isConst, GetAverageType(d.AllNodes.ToList()));
+
+                var isVariantLeftPartType = (leftPartType is IdentifierNameSyntax identSyntax) ? identSyntax.Identifier.Text == "Variant" : false;
+
+                rightPart = GetLiteralExpression(initializer, isConst, isVariantLeftPartType);
 
                 var containCallExpr = GetExpressionsList(initializer).Any(x => x.TypeName == "GDCallExpression");
                 var isItStandartGodotType = ValidateTypeAndNameHelper.IsStandartGodotType(methodNameText);
@@ -60,9 +66,12 @@ namespace GDShrapt.Converter.Tests
             }
             else
             {
+                kind = GetAverageType(d.AllNodes.ToList());
+
                 leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, averageType: kind);
                 modifiers = GetModifier(isConst: isConst, averageType: kind);
 
+                rightPart = GetLiteralExpression(initializer, isConst);
                 member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
             }
 
@@ -492,7 +501,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Visit(GDMemberOperatorExpression e)
         {
-            throw new NotImplementedException();
         }
 
         public void Visit(GDPassExpression e)

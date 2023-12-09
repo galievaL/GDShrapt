@@ -3,7 +3,7 @@ using GDShrapt.Reader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests.Tests
+namespace GDShrapt.Converter.Tests.Tests2
 {
     [TestClass]
     public class FieldDeclarationTests_AdditionOfTypes : Test
@@ -50,7 +50,7 @@ namespace Generated
 {
     public class Builder
     {
-        public double Value = 2 + 0.33;
+        public double Value = 2L + 0.33;
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -83,11 +83,10 @@ namespace Generated
         public Builder() 
         {
             Value = GetValue().Add(Call(""get_value2""));
-        } 
-
-        public double GetValue()
+        }
+        public Variant GetValue()
         {
-            return 0.0;
+            return 0;
         }
     }
 }";
@@ -104,10 +103,10 @@ class_name Builder
 
 var value: Float = get_value() + get_value2()
 
-func get_value(): 
+func get_value() -> Float: 
     return 0.0
 
-func get_value2(): 
+func get_value2() -> Int: 
     return 0
 ";
 
@@ -128,7 +127,7 @@ namespace Generated
 
         public double GetValue()
         {
-            return 0.0;
+            return 0;
         }
 
         public long GetValue2()

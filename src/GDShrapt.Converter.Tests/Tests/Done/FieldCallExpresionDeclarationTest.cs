@@ -1,33 +1,29 @@
 ﻿using GDShrapt.Converter.Tests.Tests;
-using GDShrapt.Reader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests.Tests2
+namespace GDShrapt.Converter.Tests.Tests.Done
 {
     [TestClass]
-    public class FieldDeclarationTests_Array : Test
+    public class FieldCallExpresionDeclarationTest : Test
     {
         [TestMethod]
-        public void ArrayDeclaration_Test1()
+        public void FieldCallExpresionDeclarationTest1()
         {
             var code = @"
 class_name Builder
 
-var value := [0, 1, 2]
+var value := Vector2().rotated(90)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot.Collections;
-using Array = Godot.Collections.Array;
 
 namespace Generated
 {
     public class Builder
     {
-        public Array Value = new Array() { 0, 1, 2 };
+        public Vector2 Value = new Vector2().Rotated(90L);
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -36,23 +32,28 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldDeclarationTests_Array_Test1()
+        public void FieldCallExpresionDeclarationTest2()
         {
+            //если первый метод Call, то остальные тоже Call
             var code = @"
 class_name Builder
-var array := [1.23, 0, ""Hello""]
+
+var value := myMethod(""vector"").rotated(90).getPosition(1, 2, 3)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Array = Godot.Collections.Array;
 
 namespace Generated
 {
     public class Builder
     {
-        public Array Array = new Array() { 1.23, 0, ""Hello"" };
+        public Variant Value;
+        public Builder()
+        {
+            Value = Call(""MyMethod"", ""vector"").Call(""Rotated"", 90L).Call(""GetPosition"", 1L, 2L, 3L);
+        }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -61,23 +62,28 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldDeclarationTests_Array_Test2()
+        public void FieldCallExpresionDeclarationTest3()
         {
+            //если первый метод Call, то остальные тоже Call
             var code = @"
 class_name Builder
-var array = [987, 98]
+
+var value := myMethod(""vector"").getPosition(1, 2, 3)
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Array = Godot.Collections.Array;
 
 namespace Generated
 {
     public class Builder
     {
-        public Array Array = new Array() { 987, 98 };
+        public Variant Value;
+        public Builder()
+        {
+            Value = Call(""MyMethod"", ""vector"").Call(""GetPosition"", 1L, 2L, 3L);
+        }
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
@@ -86,32 +92,28 @@ namespace Generated
         }
 
         [TestMethod]
-        public void FieldDeclarationTests_Array_Test3()
+        public void FieldCallExpresionDeclarationTest4()
         {
             var code = @"
 class_name Builder
 
-var a = [10, 20, 30]
-var b = str(a)
+var value := Vector2(0, random(random())).updated()
 ";
 
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Array = Godot.Collections.Array;
 
 namespace Generated
 {
     public class Builder
     {
-        public double a = new Array[10, 20, 30];
-        public string b = a.ToString();
+        public Vector2 Value = new Vector2(0L, Call(""Random"", Call(""Random""))).Updated();
     }
 }";
             var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
 
             Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
         }
-
     }
 }

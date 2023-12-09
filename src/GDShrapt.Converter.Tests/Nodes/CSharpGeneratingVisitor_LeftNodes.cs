@@ -247,7 +247,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDMemberOperatorExpression e)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDMatchDefaultOperatorExpression e)

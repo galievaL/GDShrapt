@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using GDShrapt.Reader;
@@ -16,33 +19,60 @@ namespace GDShrapt.Converter.Tests
 {
     internal partial class CSharpGeneratingVisitor : INodeVisitor
     {
-        GDIdentifier GetIdentifierExpression(GDNode node) 
-            => ((GDIdentifierExpression)node?.Nodes?.Where(x => x.TypeName == "GDIdentifierExpression").FirstOrDefault()).Identifier;
-        
-        List<GDNode> GetExpressionsList(GDNode node) 
-            => node?.Nodes?.Where(x => x.TypeName == "GDExpressionsList").FirstOrDefault()?.Nodes?.ToList();
-
-        ExpressionSyntax GetLiteralExpression(GDNode node, bool isConst = false, ArgumentSyntax argumentsFactory = null)
+        GDIdentifier GetIdentifier(GDNode node)
         {
+            var ident = (GDIdentifierExpression)node?.Nodes?.Where(x => x.TypeName == "GDIdentifierExpression")?.FirstOrDefault();
+
+            if (ident != null)
+                return ident.Identifier;
+
+            var expr = node?.Nodes?.Where(x => x.TypeName == "GDMemberOperatorExpression" || x.TypeName == "GDCallExpression")?.FirstOrDefault();
+
+            if (expr != null)
+                return GetIdentifier(expr);
+            else
+                throw new NotImplementedException();
+        }
+
+        List<GDNode> GetExpressionsList(GDNode node) 
+            => node?.Nodes?.Where(x => x.TypeName == "GDExpressionsList")?.FirstOrDefault()?.Nodes?.ToList();
+
+        ExpressionSyntax GetLiteralExpression(GDNode node, bool isConst = false, bool isVariantLeftPartType = false)
+        {
+            var nodes = new List<GDNode>();
+            var memNode = default(GDMemberOperatorExpression);
+
             if (node.TypeName == "")
                 throw new NotImplementedException();
 
             switch (node.TypeName)
             {
                 case "GDCallExpression":
-                    var ident = GetIdentifierExpression(node);
-                    var parameters = GetExpressionsList(node);
                     var args = new List<ExpressionSyntax>();
+                    nodes = node?.Nodes.ToList();
 
-                    foreach (var p in parameters)
-                        args.Add(GetLiteralExpression(p, isConst, argumentsFactory));
+                    var ident = ((GDIdentifierExpression)nodes?.Where(x => x.TypeName == "GDIdentifierExpression")?.FirstOrDefault())?.Identifier;
+                    var parameters = ((GDExpressionsList)nodes?.Where(x => x.TypeName == "GDExpressionsList")?.FirstOrDefault()).Nodes?.ToList();
 
-                    return GetArgumentToMethodExpressionSyntax(ident, isConst, args);
+                    if (parameters != null)
+                    {
+                        foreach (var p in parameters)
+                            args.Add(GetLiteralExpression(p, isConst, isVariantLeftPartType));
+                    }
+
+                    memNode = (GDMemberOperatorExpression)nodes?.Where(x => x.TypeName == "GDMemberOperatorExpression")?.FirstOrDefault();
+                    if (memNode != null)
+                    {
+                        var memb = GetLiteralExpression(memNode, isConst, isVariantLeftPartType);
+                        var validMethodN = ValidateTypeAndNameHelper.GetValidateFieldName(memNode.Identifier.ToString());
+
+                        return GetArgumentToMethodExpressionSyntax(memb, args, isVariantLeftPartType, validMethodN);
+                    }
+                    return GetArgumentToMethodExpressionSyntax(ident, isConst, args, isVariantLeftPartType);
                 case "GDDualOperatorExpression":
                     var operatorType = GetCSharpDualOperatorType(((GDDualOperatorExpression)node).OperatorType);
-                    var nodes = node.Nodes.ToList();
-
-                    return BinaryExpression(operatorType, GetLiteralExpression(nodes[0], isConst), GetLiteralExpression(nodes[1], isConst));
+                    nodes = node.Nodes.ToList();
+                    return BinaryExpression(operatorType, GetLiteralExpression(nodes[0], isConst, isVariantLeftPartType), GetLiteralExpression(nodes[1], isConst, isVariantLeftPartType));
                 case "GDStringExpression":
                     return GetLiteralExpression((GDStringExpression)node);
                 case "GDNumberExpression":
@@ -50,15 +80,38 @@ namespace GDShrapt.Converter.Tests
                 case "GDBoolExpression":
                     return GetLiteralExpression(bool.Parse(node.ToString()));
                 case "GDIdentifierExpression":
-                    var identif = ((GDIdentifierExpression)node).Identifier.ToString();
-                    ValidateTypeAndNameHelper.IsGodotFunctions(ref identif, out MyType type);
-                    return IdentifierName(identif);
+                    return GetLiteralExpression((GDIdentifierExpression)node);
+                case "GDMemberOperatorExpression":
+                    memNode = (GDMemberOperatorExpression)node;
+                    var validMethodName = ValidateTypeAndNameHelper.GetValidateFieldName(memNode.Identifier.ToString());
+
+                    var expr1 = GetLiteralExpression(memNode.Nodes.FirstOrDefault(), isConst, isVariantLeftPartType);
+                    var expr2 = isVariantLeftPartType ? IdentifierName("Call") : IdentifierName(validMethodName);
+
+                    return MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, expr1, expr2);
                 default:
                     throw new NotImplementedException();
             }
         }
-         
-        ExpressionSyntax GetArgumentToMethodExpressionSyntax(GDIdentifier methodNameIdentifier, bool isConst, List<ExpressionSyntax> expressions)
+
+        ExpressionSyntax GetArgumentToMethodExpressionSyntax(ExpressionSyntax methodExpression, List<ExpressionSyntax> expressions, bool isVariantLeftPartType, string methodName = "")
+        {
+            var arguments = expressions.Select(x => Argument(x)).ToList();
+
+            if (isVariantLeftPartType)
+            {
+                return InvocationExpression(methodExpression)
+                            .AddArgumentListArguments(Argument(GetLiteralExpression(methodName)))
+                            .AddArgumentListArguments(arguments.ToArray());
+            }
+            else
+            {
+                return InvocationExpression(methodExpression)
+                            .WithArgumentList(ArgumentList(SeparatedList(arguments)));
+            }
+        }
+
+        ExpressionSyntax GetArgumentToMethodExpressionSyntax(GDIdentifier methodNameIdentifier, bool isConst, List<ExpressionSyntax> expressions, bool isVariantLeftPartType)
         {
             var methodName = methodNameIdentifier.ToString();
             var validMethodName = ValidateTypeAndNameHelper.GetValidateFieldName(methodName);
@@ -72,26 +125,10 @@ namespace GDShrapt.Converter.Tests
             {
                 return InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, expressions[0], IdentifierName("ToString")));
             }
-            else if (methodName == "char")
-            {
-                return ParenthesizedExpression(CastExpression(PredefinedType(Token(SyntaxKind.CharKeyword)), expressions[0]));
-            }
-            else if (methodName == "float")
-            {
-                return ParenthesizedExpression(CastExpression(PredefinedType(Token(SyntaxKind.DoubleKeyword)), expressions[0]));
-            }
             else if (ValidateTypeAndNameHelper.IsGodotFunctions(ref methodName, out MyType type))
             {
                 if (methodName == "char" || methodName == "float")
-                {
-                    var tuple = ConvertMyTypeToTuple(type); //написать этот метод для всех мест
-                    TypeSyntax t1 = tuple.kind != null ? PredefinedType(Token(tuple.kind.Value)) : 
-                                        tuple.anotherType != null ? IdentifierName(tuple.anotherType.ToString()) : 
-                                        tuple.arrayTypes != null ? IdentifierName(tuple.arrayTypes.ToString()) : null;
-
-
                     return ParenthesizedExpression(CastExpression(GetTypeSyntax(type), expressions[0]));
-                }
                 else 
                     return InvocationExpression(IdentifierName(methodName))
                                     .WithArgumentList(ArgumentList(SeparatedList(arguments)));
@@ -114,12 +151,12 @@ namespace GDShrapt.Converter.Tests
             }
         }
 
-        LiteralExpressionSyntax GetLiteralExpression(GDNumberExpression numberExpression, GDNumberType? type = null)
+        LiteralExpressionSyntax GetLiteralExpression(GDNumberExpression numberExpression)
         {
             SyntaxToken literal;
             var number = numberExpression.Number;
 
-            switch (type ?? number.ResolveNumberType())
+            switch (number.ResolveNumberType())
             {
                 case GDNumberType.LongDecimal:
                 case GDNumberType.LongBinary:
@@ -154,6 +191,16 @@ namespace GDShrapt.Converter.Tests
         LiteralExpressionSyntax GetLiteralExpression(bool boolExpression)
         {
             return LiteralExpression(boolExpression ? SyntaxKind.TrueLiteralExpression : SyntaxKind.FalseLiteralExpression);
+        }
+
+        ExpressionSyntax GetLiteralExpression(GDIdentifierExpression identExpression)
+        {
+            var identif = identExpression.Identifier.ToString();
+
+            if (ValidateTypeAndNameHelper.IsGodotFunctions(ref identif, out MyType type))
+                return IdentifierName(identif);
+            else
+                return IdentifierName(ValidateTypeAndNameHelper.GetValidateFieldName(identExpression.Identifier.ToString()));
         }
 
         SyntaxKind GetSyntaxKind(GDNumberExpression numberExpression)
@@ -194,12 +241,11 @@ namespace GDShrapt.Converter.Tests
         {
             int stringExpr = 0, longExpr = 0, doubleExpr = 0, boolExpr = 0, identExpr = 0;
 
-
             foreach (var i in allNodes)
             {
                 if (i.TypeName == "GDCallExpression" || i.TypeName == "GDIdentifierExpression")
                 {
-                    var name = i.TypeName == "GDCallExpression" ? GetIdentifierExpression(i).ToString() : ((GDIdentifierExpression)i).Identifier.ToString();
+                    var name = (i.TypeName == "GDCallExpression") ? GetIdentifier((GDCallExpression)i).ToString() : ((GDIdentifierExpression)i).Identifier.ToString();
 
                     if (ValidateTypeAndNameHelper.IsGDScriptConsts(ref name, out SyntaxKind? type2) && type2.Value == SyntaxKind.DoubleKeyword)
                     {
