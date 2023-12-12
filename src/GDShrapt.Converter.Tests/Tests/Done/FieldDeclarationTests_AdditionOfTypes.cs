@@ -3,7 +3,7 @@ using GDShrapt.Reader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 
-namespace GDShrapt.Converter.Tests.Tests2
+namespace GDShrapt.Converter.Tests.Tests.Done
 {
     [TestClass]
     public class FieldDeclarationTests_AdditionOfTypes : Test
@@ -79,12 +79,12 @@ namespace Generated
     public class Builder
     {
         public Variant Value;
-
-        public Builder() 
+        public Builder()
         {
-            Value = GetValue().Add(Call(""get_value2""));
+            Value = Get_value().Add(Call(""Get_value2""));
         }
-        public Variant GetValue()
+
+        public Variant Get_value()
         {
             return 0;
         }
@@ -119,20 +119,19 @@ namespace Generated
     public class Builder
     {
         public double Value;
-
-        public Builder() 
+        public Builder()
         {
-            Value = GetValue() + GetValue2();
-        } 
+            Value = Get_value() + Get_value2();
+        }
 
-        public double GetValue()
+        public double Get_value()
         {
             return 0;
         }
 
-        public long GetValue2()
+        public long Get_value2()
         {
-            return 0;
+            return 0L;
         }
     }
 }";

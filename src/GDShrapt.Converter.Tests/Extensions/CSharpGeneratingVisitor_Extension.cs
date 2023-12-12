@@ -72,7 +72,16 @@ namespace GDShrapt.Converter.Tests
                 case "GDDualOperatorExpression":
                     var operatorType = GetCSharpDualOperatorType(((GDDualOperatorExpression)node).OperatorType);
                     nodes = node.Nodes.ToList();
-                    return BinaryExpression(operatorType, GetLiteralExpression(nodes[0], isConst, isVariantLeftPartType), GetLiteralExpression(nodes[1], isConst, isVariantLeftPartType));
+
+                    var ex1 = GetLiteralExpression(nodes[0], isConst, isVariantLeftPartType);
+                    var ex2 = GetLiteralExpression(nodes[1], isConst, isVariantLeftPartType);
+
+                    if (isVariantLeftPartType)
+                        return InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, ex1, IdentifierName("Add")))
+                                .AddArgumentListArguments(Argument(ex2));
+                    else
+                        return BinaryExpression(operatorType, ex1, ex2);
+
                 case "GDStringExpression":
                     return GetLiteralExpression((GDStringExpression)node);
                 case "GDNumberExpression":

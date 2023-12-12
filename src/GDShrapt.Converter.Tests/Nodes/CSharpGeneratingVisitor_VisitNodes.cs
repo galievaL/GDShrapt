@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using GDShrapt.Reader;
@@ -69,10 +70,30 @@ namespace GDShrapt.Converter.Tests
                 kind = GetAverageType(d.AllNodes.ToList());
 
                 leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, averageType: kind);
+                var isVariantLeftPartType = (leftPartType is IdentifierNameSyntax identSyntax) ? identSyntax.Identifier.Text == "Variant" : false;
+
                 modifiers = GetModifier(isConst: isConst, averageType: kind);
 
                 rightPart = GetLiteralExpression(initializer, isConst);
-                member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
+
+                if (initializer.TypeName == "GDDualOperatorExpression" )
+                {
+                    foreach (var node in initializer.Nodes.ToList())
+                    {
+                        if (node.TypeName == "GDCallExpression" && GetIdentifier((GDCallExpression)node).TryExtractLocalScopeVisibleDeclarationFromParents(out GDIdentifier gdIdent))
+                        {
+                            member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers);
+
+                            rightPart = GetLiteralExpression(initializer, isConst, isVariantLeftPartType);
+                            var expr = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), rightPart));
+                            AddToAllExistingConstructors(expr);
+                            AddConstructor(new ParameterListTKey(), expr);
+                            break;
+                        }
+                    }
+                }
+                
+                member = member ?? GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
             }
 
             if (member != null)
