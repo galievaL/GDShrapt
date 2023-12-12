@@ -81,7 +81,15 @@ namespace GDShrapt.Converter.Tests
                                 .AddArgumentListArguments(Argument(ex2));
                     else
                         return BinaryExpression(operatorType, ex1, ex2);
+                case "GDArrayInitializerExpression":
+                    var allCollection = ((GDArrayInitializerExpression)node).Values.Nodes.ToList();
 
+                    var argss = new List<ExpressionSyntax>();
+
+                    foreach (var p in allCollection)
+                        argss.Add(GetLiteralExpression(p, isConst, isVariantLeftPartType));
+
+                    return ArrayCreationExpression(ArrayType(IdentifierName("Array")), InitializerExpression(SyntaxKind.ArrayInitializerExpression, SeparatedList(argss)));
                 case "GDStringExpression":
                     return GetLiteralExpression((GDStringExpression)node);
                 case "GDNumberExpression":
@@ -412,28 +420,6 @@ namespace GDShrapt.Converter.Tests
         LocalDeclarationStatementSyntax GetLocalDeclarationStatement(string nameVariable, TypeSyntax typeVariable, ExpressionSyntax literalExpression = null)
         {
             return LocalDeclarationStatement(GetVariableDeclaration(nameVariable, typeVariable, literalExpression));
-        }
-
-        ExpressionSyntax AddArgumentToExpressionSyntax2(ExpressionSyntax expressionSyntax, params ArgumentSyntax[] arguments)
-        {
-            if (expressionSyntax is ObjectCreationExpressionSyntax ob)
-                return ob.AddArgumentListArguments(arguments);
-            else if (expressionSyntax is InvocationExpressionSyntax inv)
-                return inv.AddArgumentListArguments(arguments);
-            else
-                throw new NotImplementedException();
-        }
-
-        ExpressionSyntax ReplaceArgumentsInExpressionSyntax2(ExpressionSyntax expressionSyntax, params ArgumentSyntax[] arguments)
-        {
-            var argList = (arguments.Length == 0) ? SingletonSeparatedList(arguments.FirstOrDefault()) : SeparatedList(arguments.ToList());
-
-            if (expressionSyntax is ObjectCreationExpressionSyntax ob)
-                return ob.WithArgumentList(ArgumentList(argList));
-            else if (expressionSyntax is InvocationExpressionSyntax inv)
-                return inv.WithArgumentList(ArgumentList(argList));
-            else
-                throw new NotImplementedException();
         }
 
         SyntaxKind GetCSharpDualOperatorType(GDDualOperatorType gdType)

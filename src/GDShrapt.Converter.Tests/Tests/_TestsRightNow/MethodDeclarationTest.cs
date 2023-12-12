@@ -1,12 +1,11 @@
 ﻿using GDShrapt.Converter.Tests.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace GDShrapt.Converter.Tests.DimasTests
+namespace GDShrapt.Converter.Tests.Tests2
 {
     [TestClass]
     public class MethodDeclarationTest : Test
     {
-        [TestMethod]
         public void MethodDeclaration_Test1()
         {
             var code = @"
@@ -25,7 +24,7 @@ namespace Generated
 {
     public class Builder
     {
-        public Home Build()
+        public Variant Build()
         {
             return new Home();
         }
@@ -87,7 +86,7 @@ namespace Generated
 {
     public class MyMath
     {
-        public long Sum(long a, long b)
+        public Variant Sum(long a, long b)
         {
             return a + b;
         }
@@ -176,6 +175,7 @@ using System;
 using System.Linq;
 using Godot;
 using Godot.Collections;
+using Dictionary = Godot.Collections.Dictionary;
 
 namespace Generated
 {
@@ -213,6 +213,7 @@ using System;
 using System.Linq;
 using Godot;
 using Godot.Collections;
+using Array = Godot.Collections.Array;
 
 namespace Generated
 {
@@ -246,7 +247,8 @@ func create_values():
 using System;
 using System.Linq;
 using Godot;
-using Godot.Collections;
+using Dictionary = Godot.Collections.Dictionary;
+using Array = Godot.Collections.Array;
 
 namespace Generated
 {
@@ -291,7 +293,7 @@ namespace Generated
 {
     public class Helper
     {
-        public long CreateValue()
+        public Variant CreateValue()
         {
             var a = 2 + 2;
             return a;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using GDShrapt.Reader;
@@ -13,17 +14,10 @@ namespace GDShrapt.Converter.Tests
     {
         public void DidLeft(GDNode node)
         {
-            var @namespace = NamespaceDeclaration(ParseName("Generated")).NormalizeWhitespace();
-            var usings = new UsingDirectiveSyntax[]{UsingDirective(ParseName("Godot")),
-                                                    UsingDirective(ParseName("System")),
-                                                    UsingDirective(ParseName("System.Linq"))};
-
-            _compilationUnit = CompilationUnit().AddUsings(usings).AddMembers(@namespace.AddMembers(_partsCode)).NormalizeWhitespace();
         }
 
         public void DidLeft(GDExpression expr)
         {
-
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using GDShrapt.Reader;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -37,17 +38,16 @@ namespace GDShrapt.Converter.Tests
             var rightPart = default(ExpressionSyntax);
             var modifiers = new SyntaxTokenList();
 
+            kind = GetAverageType(d.AllNodes.ToList());
+
             if (initializer.TypeName == "GDCallExpression")
             {
                 var methodNameIdentifier = GetIdentifier((GDCallExpression)initializer);
                 var methodNameText = methodNameIdentifier.ToString();
+                modifiers = GetModifier(methodNameText, isConst, kind);
 
                 leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, methodNameIdentifier);
-
-                modifiers = GetModifier(methodNameText, isConst, GetAverageType(d.AllNodes.ToList()));
-
                 var isVariantLeftPartType = (leftPartType is IdentifierNameSyntax identSyntax) ? identSyntax.Identifier.Text == "Variant" : false;
-
                 rightPart = GetLiteralExpression(initializer, isConst, isVariantLeftPartType);
 
                 var containCallExpr = GetExpressionsList(initializer).Any(x => x.TypeName == "GDCallExpression");
@@ -65,41 +65,61 @@ namespace GDShrapt.Converter.Tests
                     AddConstructor(new ParameterListTKey(), expr);
                 }
             }
-            else
+            else if (initializer.TypeName == "GDDualOperatorExpression")
             {
-                kind = GetAverageType(d.AllNodes.ToList());
-
                 leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, averageType: kind);
-                var isVariantLeftPartType = (leftPartType is IdentifierNameSyntax identSyntax) ? identSyntax.Identifier.Text == "Variant" : false;
-
                 modifiers = GetModifier(isConst: isConst, averageType: kind);
 
-                rightPart = GetLiteralExpression(initializer, isConst);
+                var node = initializer.Nodes.Where(x => x.TypeName == "GDCallExpression" && GetIdentifier((GDCallExpression)x).TryExtractLocalScopeVisibleDeclarationFromParents(out GDIdentifier gdIdent)).FirstOrDefault();
 
-                if (initializer.TypeName == "GDDualOperatorExpression" )
+                if (node != null)
                 {
-                    foreach (var node in initializer.Nodes.ToList())
-                    {
-                        if (node.TypeName == "GDCallExpression" && GetIdentifier((GDCallExpression)node).TryExtractLocalScopeVisibleDeclarationFromParents(out GDIdentifier gdIdent))
-                        {
-                            member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers);
+                    member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers);
 
-                            rightPart = GetLiteralExpression(initializer, isConst, isVariantLeftPartType);
-                            var expr = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), rightPart));
-                            AddToAllExistingConstructors(expr);
-                            AddConstructor(new ParameterListTKey(), expr);
-                            break;
-                        }
-                    }
+                    var isVariantLeftPartType = (leftPartType is IdentifierNameSyntax identSyntax) ? identSyntax.Identifier.Text == "Variant" : false;
+                    rightPart = GetLiteralExpression(initializer, isConst, isVariantLeftPartType);
+                    var expr = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), rightPart));
+
+                    AddToAllExistingConstructors(expr);
+                    AddConstructor(new ParameterListTKey(), expr);
                 }
+                else
+                {
+                    rightPart = GetLiteralExpression(initializer, isConst);
+                    member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
+                }
+            }
+            else
+            {
+                leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, averageType: kind);
+                modifiers = GetModifier(isConst: isConst, averageType: kind);
+                rightPart = GetLiteralExpression(initializer, isConst);
                 
-                member = member ?? GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
+                member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
             }
 
             if (member != null)
                 _partsCode = _partsCode.AddMembers(member);
         }
+        public void Visit(GDArrayInitializerExpression e)
+        {
+            _codeUsings.Add(UsingDirective(ParseName("Godot.Collections")));
+            _codeUsings.Add(UsingDirective(NameEquals("Array"), ParseName("Godot.Collections.Array")));
 
+            var p = (GDVariableDeclaration)e.Parent;
+
+            var identifier = ValidateTypeAndNameHelper.GetValidateFieldName(p.Identifier.ToString());
+            var leftPartType = IdentifierName("Array");
+            var modifiers = GetModifier();
+            var rightPart = GetLiteralExpression(e);
+
+            var member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
+
+            if (member != null)
+                _partsCode = _partsCode.AddMembers(member);
+        }
+
+        /*
         public void Visit(GDArrayInitializerExpression e)
         {
             var @using = UsingDirective(AliasQualifiedName(IdentifierName("Array"), IdentifierName("Godot.Collections.Array")));
@@ -235,6 +255,7 @@ namespace GDShrapt.Converter.Tests
             if (collection != null)
                 _partsCode = _partsCode.AddMembers(new MemberDeclarationSyntax[] { collection });
         }
+        */
 
         public void Visit(GDExpressionsList list)
         {
