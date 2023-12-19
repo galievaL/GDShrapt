@@ -6,6 +6,7 @@ namespace GDShrapt.Converter.Tests.Tests2
     [TestClass]
     public class MethodDeclarationTest : Test
     {
+        [TestMethod]
         public void MethodDeclaration_Test1()
         {
             var code = @"
@@ -18,7 +19,6 @@ func build():
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 
 namespace Generated
 {
@@ -27,6 +27,35 @@ namespace Generated
         public Variant Build()
         {
             return new Home();
+        }
+    }
+}";
+            var csharpCode = GetCSharpCodeConvertedFromGdScript(code);
+
+            Assert.AreEqual(csharpCodeExpectedResult, csharpCode);
+        }
+
+        [TestMethod]
+        public void MethodDeclaration_Test1_1()
+        {
+            var code = @"
+class_name Builder
+
+func build():
+    return Home.new(1, 2, 3)
+";
+
+            var csharpCodeExpectedResult = @"using Godot;
+using System;
+using System.Linq;
+
+namespace Generated
+{
+    public class Builder
+    {
+        public Variant Build()
+        {
+            return new Home(1L, 2L, 3L);
         }
     }
 }";
@@ -49,7 +78,6 @@ func sum(a, b):
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 
 namespace Generated
 {
@@ -80,7 +108,6 @@ func sum(a: int, b: int):
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 
 namespace Generated
 {
@@ -111,7 +138,6 @@ func sum(a, b) -> int:
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 
 namespace Generated
 {
@@ -142,7 +168,6 @@ func get_element(a, i):
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 
 namespace Generated
 {
@@ -173,7 +198,6 @@ func create_values():
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 using Godot.Collections;
 using Dictionary = Godot.Collections.Dictionary;
 
@@ -211,7 +235,6 @@ func create_values():
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 using Godot.Collections;
 using Array = Godot.Collections.Array;
 
@@ -246,7 +269,6 @@ func create_values():
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 using Dictionary = Godot.Collections.Dictionary;
 using Array = Godot.Collections.Array;
 
@@ -287,7 +309,6 @@ func create_value():
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 
 namespace Generated
 {
@@ -320,7 +341,6 @@ func create_value(parameter):
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
-using Godot;
 
 namespace Generated
 {

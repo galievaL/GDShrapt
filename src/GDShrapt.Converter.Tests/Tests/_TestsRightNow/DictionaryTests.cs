@@ -12,9 +12,7 @@ namespace GDShrapt.Converter.Tests.Tests2
         public void DictionaryTest1()
         {
             var code = @"
-tool
-class_name HTerrainDataSaver
-extends ResourceFormatSaver
+class_name Builder
 
 # Словари
 var player_scores = { ""Alice"": 1000, ""Bob"": 2000, ""Charlie"": 1500}
@@ -23,18 +21,27 @@ var player_scores = { ""Alice"": 1000, ""Bob"": 2000, ""Charlie"": 1500}
             var csharpCodeExpectedResult = @"using Godot;
 using System;
 using System.Linq;
+using Godot.Collections;
 using Dictionary = Godot.Collections.Dictionary;
 
 namespace Generated
 {
-    [Tool]
-    public class HTerrainDataSaver : ResourceFormatSaver
+    public class Builder
     {
         public Dictionary Player_scores = new Dictionary
         {
-            {""Alice"", 1000},
-            {""Bob"", 2000},
-            {""Charlie"", 1500}
+            {
+                ""Alice"",
+                1000L
+            },
+            {
+                ""Bob"",
+                2000L
+            },
+            {
+                ""Charlie"",
+                1500L
+            }
         };
     }
 }";

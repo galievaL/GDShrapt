@@ -11,12 +11,13 @@ namespace GDShrapt.Converter.Tests
     {
         readonly ConversionSettings _conversionSettings;
 
-        private ClassDeclarationSyntax _partsCode;
-        private CompilationUnitSyntax _compilationUnit;
-        private List<MethodDeclarationSyntax> _methodsPartsCode = new List<MethodDeclarationSyntax>();
-        private List<UsingDirectiveSyntax> _codeUsings = new List<UsingDirectiveSyntax>();
+        ClassDeclarationSyntax _partsCode;
+        CompilationUnitSyntax _compilationUnit;
+        List<MethodDeclarationSyntax> _methodsPartsCode = new List<MethodDeclarationSyntax>();
+        List<UsingDirectiveSyntax> _codeUsings = new List<UsingDirectiveSyntax>();
+        Dictionary<string, GeneralType> _classVariableList = new Dictionary<string, GeneralType>();
 
-        private string _className;
+        string _className;
 
         public CSharpGeneratingVisitor(ConversionSettings conversionSettings)
         {

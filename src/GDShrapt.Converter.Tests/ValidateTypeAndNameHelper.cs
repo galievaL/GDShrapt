@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using System.Reflection;
 
 namespace GDShrapt.Converter.Tests
 {
@@ -15,31 +16,61 @@ namespace GDShrapt.Converter.Tests
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("Название поля не может быть пустым.");
 
-            name = ValidateAllLetter(name);
+            name = RemoveExtraCharacters(name);
             name = RenameIsKeywordWord(name);
             name = ValidateFirstLetter(name);
 
             return name;
         }
 
-        public static string GetValidateFieldName(this string name)
+        public static string GetValidateFieldName(this string name, ScopeType scopeType)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("Название поля не может быть пустым.");
 
-            name = ValidateAllLetter(name);
+            name = RemoveExtraCharacters(name);
             name = RenameIsKeywordWord(name);
-            name = ValidateFirstLetter(name);
+
+            if (scopeType == ScopeType.Class || scopeType == ScopeType.MethodName)
+                name = ValidateFirstLetter(name);
+            else if (scopeType == ScopeType.LocalVariable)
+            {
+                if (name[0] != '_' && name[0] != '@' && !char.IsLetter(name[0]))
+                    name = "_" + name;
+            }
 
             return name;
         }
 
-        public static string GetTypeAdaptationToStandartMethodsType(string typeName)
+        public static string GetValidateMethodName(this string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("Название поля не может быть пустым.");
+
+            name = RemoveExtraCharacters(name);
+            name = RenameIsKeywordWord(name);
+
+            if (name[0] != '_' && name[0] != '@' && !char.IsLetter(name[0]))
+                name = "_" + name;
+
+            return name;
+        }
+
+        //public static string GetTypeAdaptationToStandartMethodsType(string typeName)
+        //{
+        //    if (!IsStandartGodotType(typeName))
+        //        return typeName;
+
+        //    return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower2[typeName.ToLower()].csharpEquivalent;
+        //}
+
+        public static GeneralType GetTypeAdaptationToStandartMethodsType(string typeName)
         {
             if (!IsStandartGodotType(typeName))
-                return typeName;
+                return null;
 
-            return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower2[typeName.ToLower()].csharpEquivalent;
+            var kind = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower2[typeName.ToLower()].returnTypes;
+            return new GeneralType(kind);
         }
 
         public static bool GetTypeAdaptationToStandartMethodsType(ref string typeName)
@@ -57,7 +88,7 @@ namespace GDShrapt.Converter.Tests
             return GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptVariantTypesToLower2.ContainsKey(typeName.ToLower());
         }
 
-        public static bool IsGodotFunctions(ref string functionsName, out MyType type)
+        public static bool IsGodotFunctions(ref string functionsName, out GeneralType type)
         {
             type = null;
             var functionsNameLower = functionsName.ToLower();
@@ -78,13 +109,13 @@ namespace GDShrapt.Converter.Tests
                             b5 ? GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptUtilityFunctions_NAequivalen[functionsNameLower] :
                             throw new NotImplementedException();
 
-            type = tuple.returnTypes;
+            type = new GeneralType(tuple.returnTypes);
             functionsName = tuple.csharpEquivalent;
 
             return true;
         }
 
-        public static bool IsGDScriptConsts(ref string functionsName, out SyntaxKind? type)
+        public static bool IsGDScriptConsts(ref string functionsName, out GeneralType type)
         {
             type = null;
             var functionsNameLower = functionsName.ToLower();
@@ -94,7 +125,7 @@ namespace GDShrapt.Converter.Tests
                 var group = GDScriptObjectsWithTheirEquivalentInCSharpFunctions.GDScriptConstsToLower_TheirEquivalentAndReturnTypes[functionsNameLower];
 
                 functionsName = group.csharpEquivalent;
-                type = group.returnTypes;
+                type = new GeneralType(group.returnTypes);
 
                 return true;
             }
@@ -124,7 +155,7 @@ namespace GDShrapt.Converter.Tests
             return name;
         }
 
-        static string ValidateAllLetter(string name)
+        static string RemoveExtraCharacters(string name)
         {
             return Regex.Replace(name, "[^a-zA-Zа-яА-Я0-9_]", string.Empty);
         }

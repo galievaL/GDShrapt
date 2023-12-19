@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +10,8 @@ using GDShrapt.Reader;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Newtonsoft.Json.Linq;
+using static System.Net.Mime.MediaTypeNames;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace GDShrapt.Converter.Tests
@@ -24,17 +27,21 @@ namespace GDShrapt.Converter.Tests
 
         public void Visit(GDVariableDeclaration d)
         {
-            var identifier = ValidateTypeAndNameHelper.GetValidateFieldName(d.Identifier.ToString());
+            var identifier = ValidateTypeAndNameHelper.GetValidateFieldName(d.Identifier.ToString(), ScopeType.Class);
             var initializer = d.Initializer;
             var isConst = d.ConstKeyword != null;
             var isThereColon = d.Colon != null;
 
-            if (initializer.TypeName == "GDArrayInitializerExpression")
+            if (initializer.TypeName == "GDArrayInitializerExpression" || initializer.TypeName == "GDDictionaryInitializerExpression")
+            {
+                _codeUsings.Add(UsingDirective(ParseName("Godot.Collections")));
                 return;
+            }
 
             var member = default(MemberDeclarationSyntax);
-            var leftPartType = default(TypeSyntax);
-            var kind = default(MyType);
+            var leftPartType = default(GeneralType);
+            var leftPartTypeIdentifier = default(TypeSyntax);
+            var kind = default(GeneralType);
             var rightPart = default(ExpressionSyntax);
             var modifiers = new SyntaxTokenList();
 
@@ -47,18 +54,19 @@ namespace GDShrapt.Converter.Tests
                 modifiers = GetModifier(methodNameText, isConst, kind);
 
                 leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, methodNameIdentifier);
-                var isVariantLeftPartType = (leftPartType is IdentifierNameSyntax identSyntax) ? identSyntax.Identifier.Text == "Variant" : false;
+                leftPartTypeIdentifier = IdentifierName(leftPartType.ToString());
+                var isVariantLeftPartType = (leftPartTypeIdentifier is IdentifierNameSyntax identSyntax) ? identSyntax.Identifier.Text == CustomSyntaxKind.Variant.ToString() : false;
                 rightPart = GetLiteralExpression(initializer, isConst, isVariantLeftPartType);
 
                 var containCallExpr = GetExpressionsList(initializer).Any(x => x.TypeName == "GDCallExpression");
                 var isItStandartGodotType = ValidateTypeAndNameHelper.IsStandartGodotType(methodNameText);
-                var isGodotFunctions = ValidateTypeAndNameHelper.IsGodotFunctions(ref methodNameText, out MyType type);
+                var isGodotFunctions = ValidateTypeAndNameHelper.IsGodotFunctions(ref methodNameText, out GeneralType type);
 
                 if (isConst || !containCallExpr && (isItStandartGodotType || isGodotFunctions))
-                    member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
+                    member = GetVariableFieldDeclaration(identifier, leftPartTypeIdentifier, modifiers, rightPart);
                 else
                 {
-                    member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers);
+                    member = GetVariableFieldDeclaration(identifier, leftPartTypeIdentifier, modifiers);
 
                     var expr = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), rightPart));
                     AddToAllExistingConstructors(expr);
@@ -68,16 +76,17 @@ namespace GDShrapt.Converter.Tests
             else if (initializer.TypeName == "GDDualOperatorExpression")
             {
                 leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, averageType: kind);
+                leftPartTypeIdentifier = IdentifierName(leftPartType.ToString());
                 modifiers = GetModifier(isConst: isConst, averageType: kind);
 
                 var node = initializer.Nodes.Where(x => x.TypeName == "GDCallExpression" && GetIdentifier((GDCallExpression)x).TryExtractLocalScopeVisibleDeclarationFromParents(out GDIdentifier gdIdent)).FirstOrDefault();
 
                 if (node != null)
                 {
-                    member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers);
+                    member = GetVariableFieldDeclaration(identifier, leftPartTypeIdentifier, modifiers);
 
-                    var isVariantLeftPartType = (leftPartType is IdentifierNameSyntax identSyntax) ? identSyntax.Identifier.Text == "Variant" : false;
-                    rightPart = GetLiteralExpression(initializer, isConst, isVariantLeftPartType);
+                    var isVariantLeftPartType = (leftPartTypeIdentifier is IdentifierNameSyntax identSyntax) ? identSyntax.Identifier.Text == CustomSyntaxKind.Variant.ToString() : false;
+                    rightPart = GetLiteralExpression(initializer, isConst, isVariantLeftPartType, ScopeType.Class);
                     var expr = ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(identifier), rightPart));
 
                     AddToAllExistingConstructors(expr);
@@ -85,177 +94,118 @@ namespace GDShrapt.Converter.Tests
                 }
                 else
                 {
-                    rightPart = GetLiteralExpression(initializer, isConst);
-                    member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
+                    rightPart = GetLiteralExpression(initializer, isConst, scopeType: ScopeType.Class);
+                    member = GetVariableFieldDeclaration(identifier, leftPartTypeIdentifier, modifiers, rightPart);
                 }
             }
             else
             {
                 leftPartType = GetTypeVariable(isThereColon, d.Type, isConst, averageType: kind);
+                leftPartTypeIdentifier = IdentifierName(leftPartType.ToString());
                 modifiers = GetModifier(isConst: isConst, averageType: kind);
-                rightPart = GetLiteralExpression(initializer, isConst);
+                rightPart = GetLiteralExpression(initializer, isConst, scopeType: ScopeType.Class);
                 
-                member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
+                member = GetVariableFieldDeclaration(identifier, leftPartTypeIdentifier, modifiers, rightPart);
             }
 
             if (member != null)
                 _partsCode = _partsCode.AddMembers(member);
+
+            _classVariableList.Add(identifier, leftPartType);
         }
+
         public void Visit(GDArrayInitializerExpression e)
         {
-            _codeUsings.Add(UsingDirective(ParseName("Godot.Collections")));
             _codeUsings.Add(UsingDirective(NameEquals("Array"), ParseName("Godot.Collections.Array")));
 
-            var p = (GDVariableDeclaration)e.Parent;
+            var member = GetCollectionMember(e, "Array", ScopeType.Class);
 
-            var identifier = ValidateTypeAndNameHelper.GetValidateFieldName(p.Identifier.ToString());
-            var leftPartType = IdentifierName("Array");
-            var modifiers = GetModifier();
-            var rightPart = GetLiteralExpression(e);
-
-            var member = GetVariableFieldDeclaration(identifier, leftPartType, modifiers, rightPart);
-
-            if (member != null)
-                _partsCode = _partsCode.AddMembers(member);
+            _partsCode = _partsCode.AddMembers(member);
         }
 
-        /*
-        public void Visit(GDArrayInitializerExpression e)
+        public void Visit(GDDictionaryInitializerExpression e)
         {
-            var @using = UsingDirective(AliasQualifiedName(IdentifierName("Array"), IdentifierName("Godot.Collections.Array")));
-            _compilationUnit = _compilationUnit.WithUsings(new SyntaxList<UsingDirectiveSyntax>() { @using });
+            _codeUsings.Add(UsingDirective(NameEquals("Dictionary"), ParseName("Godot.Collections.Dictionary")));
 
-            var allCollection = e.Values.Nodes.ToList();
-            var p = (GDVariableDeclaration)e.Parent;
-            var identifier = p.Identifier.ToString();
-            var initializerType = p.Initializer.TypeName;
+            var member = GetCollectionMember(e, "Dictionary", ScopeType.Class);
 
-            var type = allCollection[0].TypeName;
-            var isDifferentTypes = allCollection.Any(c => c.TypeName != type);
+            _partsCode = _partsCode.AddMembers(member);
+        }
 
-            List<ExpressionSyntax> literalExpressions = null;
-            InitializerExpressionSyntax initializerExpression;
-            SyntaxToken predefinedType = new SyntaxToken();
+        public void Visit(GDMethodDeclaration d)
+        {
+            var methodName = ValidateTypeAndNameHelper.GetValidateFieldName(d.Identifier.ToString(), ScopeType.MethodName);
 
-            FieldDeclarationSyntax collection = null;
+            var member = default(MethodDeclarationSyntax);
 
-            if (isDifferentTypes)
+            var parameterSyntax = new List<ParameterSyntax>();
+            var args = new List<StatementSyntax>();
+
+            foreach (var methodDeclarationNode in d.Nodes.ToList())
             {
-                predefinedType = ParseToken("Godot.Variant"); //ToDo: выяснить, нужно ли убирать слово годот, так как есть юзинг годота в коде
-
-                //collection = CreateField(identifier, predefinedType, CreateArrayInitializerString(allCollection));
-                //ToDo дописать наполнение для collection в случае, если элементы коллекции имеют разные типы
-                object b = new List<string>();
-
-                foreach (var coll in allCollection)
+                if (methodDeclarationNode.TypeName == "GDParametersList")
                 {
-                    switch (coll.TypeName)
+                    var parametersList = ((GDParametersList)methodDeclarationNode).Nodes.ToList();
+
+                    foreach (var par in parametersList)
                     {
-                        case "GDStringExpression":
-                            literalExpressions.Add(GetLiteralExpression((GDStringExpression)coll));
-                            break;
-                        case "GDNumberExpression":
-                            literalExpressions.Add(GetLiteralExpression((GDNumberExpression)coll));
-                            break;
-                        case "GDBoolExpression":
-                            literalExpressions.Add(GetLiteralExpression(bool.Parse(coll.ToString())));
-                            break;
-                        case "GDCallExpression":
-                            throw new NotImplementedException();
-                            break;
-                        default:
-                            break;
+                        var parameter = (GDParameterDeclaration)par;
+                        var ident = parameter.Identifier.ToString();
+
+                        //var type = parameter.Type?.ToString() ?? CustomSyntaxKind.Variant.ToString();
+                        var type = GetTypeVariable(parameter.Type?.ToString());
+                        parameterSyntax.Add(Parameter(Identifier(ident)).WithType(IdentifierName(type.ToString())));
+
+                        _classVariableList.Add(ident, GeneralTypeHelper.GetGeneralType(type.ToString()));
                     }
-                    initializerExpression = InitializerExpression(SyntaxKind.ArrayInitializerExpression, SeparatedList(literalExpressions));
                 }
-            }
-            else
-            {
-                //literalExpressions = allCollection.Select(value => (ExpressionSyntax)GetLiteralExpression(value).LiteralExpressionSyntax).ToList();
-
-                switch (type)
+                else if (methodDeclarationNode.TypeName == "GDExpressionsList")
                 {
-                    case "GDStringExpression":
-                        collection = CreateArrayField(e, SyntaxKind.StringKeyword);
-                        break;
-                    case "GDNumberExpression":
-                        var isDouble = allCollection.Any(x => GetSyntaxKind((GDNumberExpression)x) == SyntaxKind.DoubleKeyword);
-                        var kind = isDouble ? SyntaxKind.DoubleKeyword : GetSyntaxKind((GDNumberExpression)allCollection[0]);
-                        collection = CreateArrayField(e, kind);
-                        break;
-                    case "GDBoolExpression":
-                        collection = CreateArrayField(e, SyntaxKind.BoolKeyword);
-                        break;
-                    case "GDCallExpression":
-                        var expList = e.Nodes.ToList()[0];
-                        var callExprList = expList.Nodes.ToList();
 
-                        List<InvocationExpressionSyntax> invocationExpression = new List<InvocationExpressionSyntax>();
+                }
+                else if (methodDeclarationNode.TypeName == "GDStatementsList")
+                {
+                    var exprStatementList = methodDeclarationNode.Nodes.ToList();
 
-                        foreach (var callExprItem in callExprList)
+                    foreach(var exprStatem in exprStatementList)
+                    {
+                        if (exprStatem.TypeName == "GDExpressionStatement")
                         {
-                            var arguments = new List<ArgumentSyntax>();
-                            var ident = "";
-
-                            foreach (var item in callExprItem.Nodes.ToList())
+                            foreach (var expr in exprStatem.Nodes.ToList())
                             {
-                                if (item.TypeName == "GDIdentifierExpression")
-                                    ident = ((GDIdentifierExpression)item).Identifier.ToString();
-                                else if (item.TypeName == "GDExpressionsList")
+                                if (expr.TypeName == "GDReturnExpression")
                                 {
-                                    var expressions = ((GDExpressionsList)item).Nodes.ToList();
+                                    var returnExpressions = expr.Nodes.ToList();
 
-                                    foreach (var arg in expressions)
+                                    foreach (var returnExpression in returnExpressions)
                                     {
-                                        switch (arg.TypeName)
-                                        {
-                                            case "GDStringExpression":
-                                                arguments.Add(Argument(GetLiteralExpression((GDStringExpression)arg)));
-                                                break;
-                                            case "GDNumberExpression":
-                                                arguments.Add(Argument(GetLiteralExpression((GDNumberExpression)arg)));
-                                                break;
-                                            case "GDBoolExpression":
-                                                arguments.Add(Argument(GetLiteralExpression(bool.Parse(arg.ToString()))));
-                                                break;
-                                            case "GDCallExpression":
-                                                throw new NotImplementedException();
-                                                break;
-                                            default:
-                                                break;
-                                        }
+                                        var type = IsClassVariable("");
+
+                                        //if (type != null)
+                                        //{
+                                            
+                                        //}
+
+                                        //var averageType = ConvertMyTypeToTuple(GetAverageType(returnExpressions));
+                                        var averageType = GetAverageType(returnExpressions);
+
+                                        var isVariantLeftPartType = averageType != null && averageType.CustomType == CustomSyntaxKind.Variant;
+
+                                        args.Add(ReturnStatement(GetLiteralExpression(returnExpression, isVariantLeftPartType: isVariantLeftPartType, scopeType:ScopeType.LocalVariable))); 
                                     }
                                 }
-                                else
-                                    throw new NotImplementedException();
-                            }
-
-                            if (ident != null && arguments != null)
-                            {
-                                var eee = ObjectCreationExpression(IdentifierName(ident))
-                                            .WithArgumentList(ArgumentList(SeparatedList(arguments)));
-
-                                var ll = InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("Variant"), IdentifierName("CreateFrom")))
-                                            .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(eee))));
-
-                                invocationExpression.Add(ll);
                             }
                         }
-                        var expr = invocationExpression.Select(value => (ExpressionSyntax)value);
-                        initializerExpression = InitializerExpression(SyntaxKind.ArrayInitializerExpression, SeparatedList(expr));
-
-                        var modifiers = GetModifier();
-                        collection = CreateArrayField(identifier, IdentifierName("Variant"), initializerExpression, modifiers);
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                        break;
+                    }
                 }
+                else
+                    throw new NotImplementedException();
             }
-            if (collection != null)
-                _partsCode = _partsCode.AddMembers(new MemberDeclarationSyntax[] { collection });
+
+            member = GetMethodDeclaration(d.ReturnType, methodName, parameterSyntax.ToArray(), args);
+
+            _methodsPartsCode.Add(member);
         }
-        */
 
         public void Visit(GDExpressionsList list)
         {
@@ -296,7 +246,6 @@ namespace GDShrapt.Converter.Tests
         #region
         public void Visit(GDDictionaryKeyValueDeclaration d)
         {
-            throw new NotImplementedException(); 
         }
 
         public void Visit(GDEnumDeclaration d)
@@ -349,7 +298,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Visit(GDDictionaryKeyValueDeclarationList list)
         {
-            throw new NotImplementedException();
         }
 
         public void Visit(GDElifBranchesList list)
@@ -388,59 +336,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Visit(GDStatementsList list)
         {
-        }
-
-        public void Visit(GDMethodDeclaration d)
-        {
-            var identifier = ValidateTypeAndNameHelper.GetValidateFieldName(d.Identifier.ToString());
-            var statementsList = d.Nodes.Where(x => x.TypeName == "GDStatementsList").FirstOrDefault().Nodes.ToList();
-            var type = d.ReturnType != null ? ValidateTypeAndNameHelper.GetTypeAdaptationToStandartMethodsType(d.ReturnType.ToString()) : "Variant";
-
-            var args = new List<StatementSyntax>();
-
-            foreach (var stat in statementsList)
-            {
-                if (stat.TypeName == "GDExpressionStatement")
-                {
-                    var tt = ((GDExpressionStatement)stat).Nodes.ToList();
-
-                    foreach (var expr in tt)
-                    {
-                        if (expr.TypeName == "GDReturnExpression")
-                        {
-                            var returnExpression = expr.Nodes.ToList();
-
-                            foreach (var ret in returnExpression)
-                            {
-                                args.Add(ReturnStatement(GetLiteralExpression(ret)));
-                            }
-                        }
-                    }
-                }
-                else if (stat.TypeName == "GDVariableDeclarationStatement")
-                {
-                    var stat1 = ((GDVariableDeclarationStatement)stat);
-                    var statNodes = stat1.Nodes.ToList();
-                    var ident = ValidateTypeAndNameHelper.GetValidateFieldName(stat1.Identifier.ToString());
-                    var initializer = stat1.Initializer;
-
-                    foreach (var t in statNodes)
-                    {
-                        if (t.TypeName == "GDDualOperatorExpression")
-                        {
-                        }
-                        else if (t.TypeName == "GDStringExpression")
-                        {
-                            var literal = LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(initializer.ToString()));
-
-                            args.Add(GetLocalDeclarationStatement(ident.ToString(), IdentifierName("var"), literal));
-                        }
-                    }
-                }
-            }
-
-            var member = GetMethodDeclaration(type, identifier.ToString(), SyntaxTokenList.Create(Token(SyntaxKind.PublicKeyword)), args.ToArray());
-            _methodsPartsCode.Add(member);
         }
 
         public void Visit(GDExpressionStatement s)
@@ -498,11 +393,6 @@ namespace GDShrapt.Converter.Tests
         }
 
         public void Visit(GDContinueExpression e)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Visit(GDDictionaryInitializerExpression e)
         {
             throw new NotImplementedException();
         }

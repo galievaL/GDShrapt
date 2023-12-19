@@ -90,7 +90,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDDictionaryKeyValueDeclaration decl)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDEnumDeclaration decl)
@@ -130,7 +129,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDDictionaryKeyValueDeclarationList list)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDElifBranchesList list)
@@ -286,7 +284,6 @@ namespace GDShrapt.Converter.Tests
 
         public void Left(GDDictionaryInitializerExpression e)
         {
-            throw new NotImplementedException();
         }
 
         public void Left(GDContinueExpression e)
